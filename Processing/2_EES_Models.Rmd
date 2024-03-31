@@ -36,7 +36,7 @@ for(year in names(EES)) {
     tryCatch({
       # Attempt to process the data
       country_data = EES[[year]][[country_code]]
-      network_estimate = estimateNetwork(country_data, default = "EBICglasso")
+      network_estimate = estimateNetwork(country_data, default = "EBICglasso", tuning = 0.25)
       
       # If successful, store the result and set the name
       EES_GGM_glasso[[year]][[country_code]] = network_estimate
@@ -59,11 +59,8 @@ for(year in names(EES_GGM_glasso)) {
     # Access the 'graph' object 
     graph_object = EES_GGM_glasso[[year]][[country_code]][["graph"]]
     
-    # Convert the 'graph' object to a data frame
-    graph_df = as.data.frame(graph_object)
-    
     # Assemble the final list with 'graph' as a data frame
-    EES_GGM_glasso[[year]][[country_code]] = list(graph = graph_df)
+    EES_GGM_glasso[[year]][[country_code]] = list(graph = graph_object)
   }
 }
 
@@ -84,7 +81,7 @@ for(year in names(EES)) {
     tryCatch({
       # Attempt to process the data
       country_data = EES[[year]][[country_code]]
-      network_estimate = estimateNetwork(country_data, default = "huge")
+      network_estimate = estimateNetwork(country_data, default = "huge", tuning = 0.25)
       
       # If successful, store the result and set the name
       EES_GGM_huge[[year]][[country_code]] = network_estimate
@@ -106,11 +103,8 @@ for(year in names(EES_GGM_huge)) {
     # Access the 'graph' object 
     graph_object = EES_GGM_huge[[year]][[country_code]][["graph"]]
     
-    # Convert the 'graph' object to a data frame
-    graph_df = as.data.frame(graph_object)
-    
     # Assemble the final list with 'graph' as a data frame
-    EES_GGM_huge[[year]][[country_code]] = list(graph = graph_df)
+    EES_GGM_huge[[year]][[country_code]] = list(graph = graph_object)
   }
 }
 
@@ -234,6 +228,46 @@ for(year in names(EES)) {
     })
   }
 }
+```
+
+## Make structure uniform
+
+```{r}
+# make _huge list equal to _COR list
+
+# Loop for year 
+for (year in names(EES_GGM_huge)) {
+  
+  # Loop for country 
+  for (country_code in names(EES_GGM_huge[[year]])) {
+    
+    # Extract the graph object
+    graph <- EES_GGM_huge[[year]][[country_code]][["graph"]]
+    
+    # Assign the graph object to the upper level of the list
+    EES_GGM_huge[[year]][[country_code]] <- graph
+  }
+}
+
+```
+
+```{r}
+# make _glasso list equal to _COR list
+
+# Loop for year 
+for (year in names(EES_GGM_glasso)) {
+  
+  # Loop for country 
+  for (country_code in names(EES_GGM_glasso[[year]])) {
+    
+    # Extract the graph object
+    graph <- EES_GGM_glasso[[year]][[country_code]][["graph"]]
+    
+    # Assign the graph object to the upper level of the list
+    EES_GGM_glasso[[year]][[country_code]] <- graph
+  }
+}
+
 ```
 
 # Output
