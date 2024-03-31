@@ -304,11 +304,11 @@ b2 = list_2014[["1056"]] %>%
 list_2014[["1056"]] = b1
 list_2014[["1056_2"]] = b2
 
-#remove country and empty col
+#remove country, int_lang, and empty col
 list_2014 = lapply(list_2014, function(df) {
   df %>%
     select(where(~ !all(is.na(.))),
-           -(countrycode))
+           -c(countrycode, p13_intlang))
 })
 
 #examine pattern of missing
@@ -463,6 +463,17 @@ names(list_2019) = countrycode(names(list_2019), "country.name", "iso3c")
 ```
 
 ## Merge
+
+```{r}
+#rename belgium2 to avoid common names within each list
+names(list_1989)[13] <- "XXX"
+names(list_1994)[13] <- "XXX"
+names(list_1999)[16] <- "XXX"
+names(list_2009)[2] <- "XXX"
+names(list_2014)[29] <- "XXX"
+names(list_2019)[29] <- "XXX"
+```
+
 
 ### Common list
 

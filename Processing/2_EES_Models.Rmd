@@ -1,0 +1,249 @@
+---
+title: "2_EES_Models"
+author: "Arturo Bertero"
+date: "2024-03-31"
+output: html_document
+---
+
+```{r}
+library("pacman")
+p_load(tidyverse, here, haven, countrycode, qgraph, bootnet, EGAnet, psych,
+       huge, corclass)
+```
+
+
+# Input
+
+```{r}
+EES = read_rds(here("Input", "data", "EES.rds"))
+```
+
+
+# Processing
+
+## GGM_glasso
+
+```{r}
+# initialize list
+EES_GGM_glasso = list()
+
+# Loop for year
+for(year in names(EES)) {
+  EES_GGM_glasso[[year]] = list()
+  
+  # Loop for country
+  for(country_code in names(EES[[year]])) {
+    tryCatch({
+      # Attempt to process the data
+      country_data = EES[[year]][[country_code]]
+      network_estimate = estimateNetwork(country_data, default = "EBICglasso")
+      
+      # If successful, store the result and set the name
+      EES_GGM_glasso[[year]][[country_code]] = network_estimate
+      names(EES_GGM_glasso[[year]])[length(EES_GGM_glasso[[year]])] = country_code
+    }, error = function(e) {
+      cat("Error processing", country_code, "in year", year, ": ", e$message, "\n")
+    })
+  }
+}
+
+```
+
+```{r}
+# remove all but "graph", and transform into a df
+
+# Loop for year
+for(year in names(EES_GGM_glasso)) {
+  # Loop for country 
+  for(country_code in names(EES_GGM_glasso[[year]])) {
+    # Access the 'graph' object 
+    graph_object = EES_GGM_glasso[[year]][[country_code]][["graph"]]
+    
+    # Convert the 'graph' object to a data frame
+    graph_df = as.data.frame(graph_object)
+    
+    # Assemble the final list with 'graph' as a data frame
+    EES_GGM_glasso[[year]][[country_code]] = list(graph = graph_df)
+  }
+}
+
+```
+
+## GGM_huge
+
+```{r}
+# initialize list
+EES_GGM_huge = list()
+
+# Loop for year
+for(year in names(EES)) {
+  EES_GGM_huge[[year]] = list()
+  
+  # Loop for country
+  for(country_code in names(EES[[year]])) {
+    tryCatch({
+      # Attempt to process the data
+      country_data = EES[[year]][[country_code]]
+      network_estimate = estimateNetwork(country_data, default = "huge")
+      
+      # If successful, store the result and set the name
+      EES_GGM_huge[[year]][[country_code]] = network_estimate
+      names(EES_GGM_huge[[year]])[length(EES_GGM_huge[[year]])] = country_code
+    }, error = function(e) {
+      cat("Error processing", country_code, "in year", year, ": ", e$message, "\n")
+    })
+  }
+}
+```
+
+```{r}
+# remove all but "graph", and transform into a df
+
+# Loop for year
+for(year in names(EES_GGM_huge)) {
+  # Loop for country 
+  for(country_code in names(EES_GGM_huge[[year]])) {
+    # Access the 'graph' object 
+    graph_object = EES_GGM_huge[[year]][[country_code]][["graph"]]
+    
+    # Convert the 'graph' object to a data frame
+    graph_df = as.data.frame(graph_object)
+    
+    # Assemble the final list with 'graph' as a data frame
+    EES_GGM_huge[[year]][[country_code]] = list(graph = graph_df)
+  }
+}
+
+```
+
+## EGA
+
+```{r}
+# initialize list
+EES_EGA = list()
+
+# Loop for year
+for(year in names(EES)) {
+  EES_EGA[[year]] = list()
+  
+  # Loop for country
+  for(country_code in names(EES[[year]])) {
+    tryCatch({
+      # Attempt to process the data
+      country_data = EES[[year]][[country_code]]
+      network_estimate = EGA(country_data, corr = "spearman", model = "glasso",
+                             plot.EGA = F)
+      
+      # If successful, store the result and set the name
+      EES_EGA[[year]][[country_code]] = network_estimate
+      names(EES_EGA[[year]])[length(EES_EGA[[year]])] = country_code
+    }, error = function(e) {
+      cat("Error processing", country_code, "in year", year, ": ", e$message, "\n")
+    })
+  }
+}
+
+```
+
+```{r}
+# remove all but "n.dim", and transform into a vector
+
+# Loop for each year in the list
+for(year in names(EES_EGA)) {
+  # Loop for each country in the list
+  for(country_code in names(EES_EGA[[year]])) {
+    # Get the value of the n.dim element
+    n_dim_value = EES_EGA[[year]][[country_code]][["n.dim"]]
+    
+    # Preserve only that value 
+    EES_EGA[[year]][[country_code]] = list(n.dim = n_dim_value)
+  }
+}
+
+```
+
+## CCA
+
+```{r}
+# initialize list
+EES_CCA = list()
+
+# Loop for year
+for(year in names(EES)) {
+  EES_CCA[[year]] = list()
+  
+  # Loop for country
+  for(country_code in names(EES[[year]])) {
+    tryCatch({
+      # Attempt to process the data
+      country_data = EES[[year]][[country_code]]
+      network_estimate = cca(country_data, filter.significance = T, filter.value = 0.05,
+                             zero.action = "ownclass", verbose = F)
+      
+      # If successful, store the result and set the name
+      EES_CCA[[year]][[country_code]] = network_estimate
+      names(EES_CCA[[year]])[length(EES_CCA[[year]])] = country_code
+    }, error = function(e) {
+      cat("Error processing", country_code, "in year", year, ": ", e$message, "\n")
+    })
+  }
+}
+
+```
+
+```{r}
+# remove all but "modules", and transform into a vector
+
+# Loop over each year in the EES_CCA list
+for(year in names(EES_CCA)) {
+  # Loop over each country within the year
+  for(country in names(EES_CCA[[year]])) {
+    # Get the length of the original modules list
+    modules_length <- length(EES_CCA[[year]][[country]][["modules"]])
+    
+    # Eliminate all objects except for the modules object and set its value
+    # to the length of the original modules list
+    EES_CCA[[year]][[country]] <- list(modules = modules_length)
+  }
+}
+
+```
+
+## Cor
+
+```{r}
+# initialize list
+EES_COR = list()
+
+# Loop for year
+for(year in names(EES)) {
+  EES_COR[[year]] = list()
+  
+  # Loop for country
+  for(country_code in names(EES[[year]])) {
+    tryCatch({
+      # Attempt to process the data
+      country_data = EES[[year]][[country_code]]
+      network_estimate = cor_auto(country_data, npn.SKEPTIC = T, ordinalLevelMax = 5, forcePD = TRUE, verbose = T)
+      
+      # If successful, store the result and set the name
+      EES_COR[[year]][[country_code]] = network_estimate
+      names(EES_COR[[year]])[length(EES_COR[[year]])] = country_code
+    }, error = function(e) {
+      cat("Error processing", country_code, "in year", year, ": ", e$message, "\n")
+    })
+  }
+}
+```
+
+# Output
+
+```{r}
+# save model files
+saveRDS(EES_GGM_huge, here("Input", "models", "EES_GGM_huge.rds"))
+saveRDS(EES_GGM_glasso, here("Input", "models", "EES_GGM_glasso.rds"))
+saveRDS(EES_EGA, here("Input", "models", "EES_EGA.rds"))
+saveRDS(EES_COR, here("Input", "models", "EES_COR.rds"))
+saveRDS(EES_CCA, here("Input", "models", "EES_CCA.rds"))
+```
+

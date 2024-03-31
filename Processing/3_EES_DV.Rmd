@@ -1,0 +1,26 @@
+---
+title: "3_EES_DV"
+author: "Arturo Bertero"
+date: "2024-03-31"
+output: html_document
+---
+
+```{r}
+library("pacman")
+p_load(tidyverse, here, haven, countrycode, qgraph, bootnet, EGAnet, psych,
+       huge, corclass)
+```
+
+
+# Input
+
+```{r}
+EES_CCA = read_rds(here("Input", "models", "EES_CCA.rds"))
+EES_COR = read_rds(here("Input", "models", "EES_COR.rds"))
+EES_EGA = read_rds(here("Input", "models", "EES_EGA.rds"))
+EES_GGM_glasso = read_rds(here("Input", "models", "EES_GGM_glasso.rds"))
+EES_GGM_huge = read_rds(here("Input", "models", "EES_GGM_huge.rds"))
+```
+
+
+# Processing
