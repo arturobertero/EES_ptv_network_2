@@ -322,7 +322,7 @@ list_2014 = lapply(list_2014, function(df) {
 
 ```
 
-### 2019 original: ok
+### 2019 original
 
 ```{r}
 #select ptvs and country, NAs, recode

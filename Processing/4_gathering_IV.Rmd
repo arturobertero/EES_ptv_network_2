@@ -1,0 +1,497 @@
+---
+title: "4_gathering_IV"
+author: "Arturo Bertero"
+date: "2024-04-02"
+output: html_document
+---
+
+```{r}
+library("pacman")
+p_load(tidyverse, here, haven, countrycode, vdemdata, psych, lavaan, ltm,
+       janitor, conflicted)
+
+#conflicts
+conflict_prefer("select", "dplyr")
+conflict_prefer("filter", "dplyr")
+```
+
+
+# Input
+
+```{r}
+# import DV to recall its structure
+DV = read_rds(here("Input", "final_data", "DV.rds"))
+
+#find unique ISO code
+unique_countries = DV %>% 
+  distinct(country)
+
+```
+
+
+# Processing
+
+## UNPD (IHDI)
+
+```{r}
+# load IHDI
+IHDI = read.csv(here("Input", "data", "IHDI.csv"))
+
+#filter countries and select years
+IHDI = IHDI %>% 
+  filter(iso3 %in% unique_countries$country) %>% 
+  dplyr::select(iso3, hdi_1990, hdi_1994, hdi_1999, hdi_2004, 
+               hdi_2009, hdi_2014, hdi_2019)
+
+# load UNPD educ data
+educ = read.csv(here("Input", "data", "UPND_educ.csv"))
+
+# filter countries and select Vs
+educ = educ %>% 
+  filter(iso3 %in% unique_countries$country) %>% 
+  select(iso3, mys_1990, mys_1994, mys_1999, mys_2004, mys_2009, 
+         mys_2014, mys_2019)
+
+```
+
+## Drazanova (HIEF)
+
+```{r}
+#load
+HIEF = read.csv(here("Input", "data", "HIEF.csv"))
+
+# transform country in ISO
+HIEF$Country = countrycode(HIEF$Country, "country.name", "iso3c")
+
+#filter
+HIEF = HIEF %>% 
+  filter(Country %in% unique_countries$country,
+         Year == "1989" |
+         Year == "1994" |
+         Year == "1999" |
+         Year == "2004" |
+         Year == "2009" |
+         Year == "2013" )
+
+```
+
+## Age of democracy (Boix et al. 2013)
+
+```{r}
+#load
+age_d = read_csv(here("Input", "data", "age_democ.csv"))
+
+#filter country and year
+age_d = age_d %>% 
+  filter(Code %in% unique_countries$country,
+         Year == "1989" |
+         Year == "1994" |
+         Year == "1999" |
+         Year == "2004" |
+         Year == "2009" |
+         Year == "2013" |
+         Year == "2019") %>% 
+  select(Code, Year, `Age of democracy`) %>% 
+  mutate(`Age of democracy` = ifelse(`Age of democracy` == "non-democracy", 0, `Age of democracy`))
+```
+
+## ENEP and Gallagher
+
+```{r}
+#load 
+ENEP_gallagher = read_delim(here("Input", "data", "enep_gallagher.csv"), delim = ";")
+```
+
+## Turnout
+
+```{r}
+#load
+turnout = read_delim(here("Input", "data", "turnout.csv"), delim = ";")
+
+#fix countries
+turnout$Country = countrycode(turnout$Country, "country.name", "iso3c")
+```
+## EES
+
+```{r}
+#pol_int
+
+#1989-2004 
+d_1989_2004 = read_dta(here("Input", "data", "trendEES.dta")) %>% 
+  clean_names() %>% 
+  dplyr::select(t_cntry, t_ees, t_var154) %>% 
+  mutate(t_var154 = if_else(t_var154 > 4, NA_real_, t_var154),
+         t_cntry = case_when(
+           t_cntry == "EAST GERMANY" ~ "GERMANY",
+           t_cntry == "WEST GERMANY" ~ "GERMANY",
+           TRUE ~ t_cntry
+         )) %>% #merge germanies
+  filter(t_cntry != "NORTHERN IRELAND") #exclude northern ireland to avoid problems with country codes
+
+#country codes
+d_1989_2004$t_cntry = countrycode(d_1989_2004$t_cntry, "country.name", "iso3c")
+
+# mean pol_int
+pol_int <- d_1989_2004 %>%
+  group_by(t_cntry, t_ees) %>%
+  summarise(mean_pint = mean(t_var154, na.rm = TRUE)) %>%
+  ungroup()
+```
+
+```{r}
+#pol_int 2009
+d_2009 = read_dta(here("Input", "data", "2009.dta")) %>% 
+  clean_names() %>%
+  dplyr::select(t103, q78) %>% 
+  mutate(q78 = if_else(q78 > 4, NA_real_, q78))
+
+# Country conversion
+d_2009 = d_2009 %>%
+  mutate(t103 = case_when(
+    t103 == 0 ~ "BEL",
+    t103 == 1 ~ "BEL",  
+    t103 == 2 ~ "CZE",
+    t103 == 3 ~ "DNK",
+    t103 == 4 ~ "DEU",
+    t103 == 5 ~ "EST",
+    t103 == 6 ~ "GRC",
+    t103 == 7 ~ "ESP",
+    t103 == 8 ~ "FRA",
+    t103 == 9 ~ "IRL",
+    t103 == 10 ~ "ITA",
+    t103 == 11 ~ "CYP",
+    t103 == 12 ~ "LVA",
+    t103 == 13 ~ "LTU",
+    t103 == 14 ~ "LUX",
+    t103 == 15 ~ "HUN",
+    t103 == 16 ~ "MTL",
+    t103 == 17 ~ "NLD",
+    t103 == 18 ~ "AUT",
+    t103 == 19 ~ "POL",
+    t103 == 20 ~ "PRT",
+    t103 == 21 ~ "SSN",
+    t103 == 22 ~ "SVK",
+    t103 == 23 ~ "FIN",
+    t103 == 24 ~ "SWE",
+    t103 == 25 ~ "GBR",
+    t103 == 26 ~ "BGR",
+    t103 == 28 ~ "ROU",
+    TRUE ~ as.character(t103)  
+  ))
+
+# mean pol_int
+pol_int_2009 <- d_2009 %>%
+  group_by(t103) %>%
+  summarise(mean_pint = mean(q78, na.rm = TRUE)) %>%
+  ungroup()
+
+# uniform structure
+pol_int_2009 <- pol_int_2009 %>%
+  rename(t_cntry = t103) %>%
+  mutate(t_ees = 2009)
+```
+
+```{r}
+# pol_int 2014
+d_2014 = read_dta(here("Input", "data", "2014.dta")) %>% 
+  clean_names() %>%
+  select(countrycode, qp6_9) %>% 
+  mutate(qp6_9 = if_else(qp6_9 < 1, NA_real_, qp6_9))
+
+# Country 
+d_2014 = d_2014 %>%
+  mutate(countrycode = case_when(
+    countrycode == 1040 ~ "Austria",
+    countrycode == 1056 ~ "Belgium", 
+    countrycode == 1100 ~ "Bulgaria",
+    countrycode == 1191 ~ "Croatia",
+    countrycode == 1196 ~ "Cyprus",
+    countrycode == 1203 ~ "Czech Rep.",
+    countrycode == 1208 ~ "Denmark",
+    countrycode == 1233 ~ "Estonia",
+    countrycode == 1246 ~ "Finland",
+    countrycode == 1250 ~ "France",
+    countrycode == 1276 ~ "Germany",
+    countrycode == 1300 ~ "Greece", 
+    countrycode == 1348 ~ "Hungary",
+    countrycode == 1372 ~ "Ireland",
+    countrycode == 1380 ~ "Italy",
+    countrycode == 1428 ~ "Latvia",
+    countrycode == 1440 ~ "Lithuania",
+    countrycode == 1442 ~ "Luxembourg", 
+    countrycode == 1470 ~ "Malta", 
+    countrycode == 1528 ~ "Netherlands", 
+    countrycode == 1616 ~ "Poland", 
+    countrycode == 1620 ~ "Portugal",
+    countrycode == 1642 ~ "Romania", 
+    countrycode == 1703 ~ "Slovakia",
+    countrycode == 1705 ~ "Slovenia", 
+    countrycode == 1724 ~ "Spain", 
+    countrycode == 1752 ~ "Sweden",
+    countrycode == 1826 ~ "United Kingdom",
+    TRUE ~ as.character(countrycode)  
+  ))
+
+# ISO
+d_2014$countrycode = countrycode(d_2014$countrycode, "country.name", "iso3c")
+
+# mean
+pol_int_2014 <- d_2014 %>%
+  group_by(countrycode) %>%
+  summarise(mean_pint = mean(qp6_9, na.rm = TRUE)) %>%
+  ungroup()
+
+# uniform structure
+pol_int_2014 <- pol_int_2014 %>%
+  rename(t_cntry = countrycode) %>%
+  mutate(t_ees = 2014)
+```
+
+```{r}
+# pol_int 2019
+d_2019 = read_dta(here("Input", "data", "2019.dta")) %>% 
+  clean_names() %>% 
+  select(countrycode, q21) %>% 
+  mutate(q21 = if_else(q21 > 4, NA_real_, q21))
+
+# Country 
+d_2019 = d_2019 %>%
+  mutate(countrycode = case_when(
+    countrycode == 1040 ~ "Austria",
+    countrycode == 1056 ~ "Belgium", 
+    countrycode == 1110 ~ "Bulgaria",
+    countrycode == 1191 ~ "Croatia",
+    countrycode == 1196 ~ "Cyprus",
+    countrycode == 1203 ~ "Czech Rep.",
+    countrycode == 1208 ~ "Denmark",
+    countrycode == 1233 ~ "Estonia",
+    countrycode == 1246 ~ "Finland",
+    countrycode == 1250 ~ "France",
+    countrycode == 1276 ~ "Germany",
+    countrycode == 1300 ~ "Greece", 
+    countrycode == 1348 ~ "Hungary",
+    countrycode == 1372 ~ "Ireland",
+    countrycode == 1380 ~ "Italy",
+    countrycode == 1428 ~ "Latvia",
+    countrycode == 1440 ~ "Lithuania",
+    countrycode == 1442 ~ "Luxembourg", 
+    countrycode == 1470 ~ "Malta", 
+    countrycode == 1528 ~ "Netherlands", 
+    countrycode == 1616 ~ "Poland", 
+    countrycode == 1620 ~ "Portugal",
+    countrycode == 1642 ~ "Romania", 
+    countrycode == 1703 ~ "Slovakia",
+    countrycode == 1705 ~ "Slovenia", 
+    countrycode == 1724 ~ "Spain", 
+    countrycode == 1752 ~ "Sweden",
+    countrycode == 1826 ~ "United Kingdom",
+    TRUE ~ as.character(countrycode)  
+  ))
+
+# ISO
+d_2019$countrycode = countrycode(d_2019$countrycode, "country.name", "iso3c")
+
+# mean
+pol_int_2019 <- d_2019 %>%
+  group_by(countrycode) %>%
+  summarise(mean_pint = mean(q21, na.rm = TRUE)) %>%
+  ungroup()
+
+# uniform structure
+pol_int_2019 <- pol_int_2019 %>%
+  rename(t_cntry = countrycode) %>%
+  mutate(t_ees = 2019)
+```
+
+```{r}
+# gather pint
+pint <- bind_rows(pol_int, pol_int_2009, pol_int_2014, pol_int_2019)
+
+# invert polarity
+pint <- pint %>% 
+  mutate(mean_pint = 5 - mean_pint)
+
+```
+
+
+## Vdem
+
+```{r}
+# load and filter
+vdem = vdem %>% 
+  filter(country_text_id %in% unique_countries$country,
+         year == "1989" |
+         year == "1994" |
+         year == "1999" |
+         year == "2004" |
+         year == "2009" |
+         year == "2013" |
+         year == "2019")
+
+```
+
+### Party institutionalization
+```{r}
+# Party institutionalization
+
+#1: ideological coherence
+#1.1: legislative party cohesion
+vdem$v2pscohesv
+#1.2: distinct party platform
+vdem$v2psplats
+
+#2: connection with constituencies
+#2.1: party linkages
+vdem$v2psprlnks
+
+#3: organizational capacities
+#3.1: party organization
+vdem$v2psorgs
+#3.2: party branches
+vdem$v2psprbrch
+
+#put in a single dataframe
+p_inst = vdem %>% 
+  select(country_text_id, year, v2pscohesv, v2psplats, v2psprlnks, v2psorgs, v2psprbrch)
+
+#mean and sum score
+p_inst = p_inst %>% 
+  mutate(ido_coh = (v2pscohesv + v2psplats)/2,
+         org_cap = (v2psorgs + v2psprbrch)/2,
+         p_inst = (ido_coh + org_cap + v2psprlnks)/3)
+```
+
+```{r}
+#PCA to validate index
+cfa_p_inst = p_inst %>% 
+  select(ido_coh, org_cap, v2psprlnks)
+
+# their cor
+cor_p_inst = cor(cfa_p_inst)
+
+#model
+model = 'Factor1 =~ ido_coh + org_cap + v2psprlnks'
+fit = cfa(model, data = cfa_p_inst, std.lv = TRUE)
+summary(fit, fit.measures= TRUE)
+
+#alpha
+alpha = cronbach.alpha(cfa_p_inst)
+
+#very good fit (cfi = 1; rmesea = 0)
+#very good loadings (0.424, 0.554, 0.689)
+#alpha 0.777
+```
+
+```{r}
+p_inst = p_inst %>% 
+  dplyr::select(country_text_id, year, p_inst)
+```
+
+### ready made p_inst
+
+```{r}
+#ready made index 
+p_inst_index = vdem %>% 
+  filter(country_text_id %in% unique_countries$country,
+         year == "1989" |
+         year == "1994" |
+         year == "1999" |
+         year == "2004" |
+         year == "2009" |
+         year == "2013" |
+         year == "2019") %>% 
+  dplyr::select(country_text_id, year, v2xps_party)
+```
+
+
+### Alternative information index
+
+```{r}
+alt_inf = vdem %>% 
+  filter(country_text_id %in% unique_countries$country,
+         year == "1989" |
+         year == "1994" |
+         year == "1999" |
+         year == "2004" |
+         year == "2009" |
+         year == "2013" |
+         year == "2019") %>% 
+  dplyr::select(country_text_id, year, v2xme_altinf)
+```
+
+### Ideology
+
+```{r}
+ideol = vdem %>% 
+  filter(country_text_id %in% unique_countries$country,
+         year == "1989" |
+         year == "1994" |
+         year == "1999" |
+         year == "2004" |
+         year == "2009" |
+         year == "2013" |
+         year == "2019") %>% 
+  dplyr::select(country_text_id, year, v2exl_legitideol)
+
+```
+
+### Polarization
+
+```{r}
+pola = vdem %>% 
+  filter(country_text_id %in% unique_countries$country,
+         year == "1989" |
+         year == "1994" |
+         year == "1999" |
+         year == "2004" |
+         year == "2009" |
+         year == "2013" |
+         year == "2019") %>% 
+  dplyr::select(country_text_id, year, v2cacamps)
+```
+
+### Mass mobilization
+
+```{r}
+mass_mob = vdem %>% 
+  filter(country_text_id %in% unique_countries$country,
+         year == "1989" |
+         year == "1994" |
+         year == "1999" |
+         year == "2004" |
+         year == "2009" |
+         year == "2013" |
+         year == "2019") %>% 
+  dplyr::select(country_text_id, year, v2cagenmob)
+```
+
+### Party identification
+
+```{r}
+party_id = vdem %>% 
+  filter(country_text_id %in% unique_countries$country,
+         year == "1989" |
+         year == "1994" |
+         year == "1999" |
+         year == "2004" |
+         year == "2009" |
+         year == "2013" |
+         year == "2019") %>% 
+  dplyr::select(country_text_id, year, v3partyid)
+```
+
+### Party system religious index
+
+```{r}
+relig = vdem %>% 
+  filter(country_text_id %in% unique_countries$country,
+         year == "1989" |
+         year == "1994" |
+         year == "1999" |
+         year == "2004" |
+         year == "2009" |
+         year == "2013" |
+         year == "2019") %>% 
+  dplyr::select(country_text_id, year, v2xpas_religion)
+```
+
