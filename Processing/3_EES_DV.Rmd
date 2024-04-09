@@ -453,6 +453,13 @@ DV = Reduce(function(x, y) merge(x, y, by = c("country", "year"), all = TRUE), D
 DV = DV %>% 
   mutate(country = ifelse(country == "XXX", "BEL", country)) %>% 
   arrange(country, year)
+
+#create country_long
+DV = DV %>% 
+  mutate(year = as.integer(year),
+    country_year = paste(country, year, sep = "_")) %>% 
+  select(country, year, country_year, EES_COR_aspl, EES_COR_constraint, EES_COR_np_i, EES_COR_np_w, EES_GGM_glasso_aspl, EES_GGM_glasso_constraint, EES_GGM_glasso_np_i, EES_GGM_glasso_np_w, EES_GGM_huge_aspl, EES_GGM_huge_constraint, EES_GGM_huge_np_i, EES_GGM_huge_np_w, EES_CCA, EES_EGA)
+
 ```
 
 

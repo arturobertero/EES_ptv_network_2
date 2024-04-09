@@ -1,0 +1,148 @@
+---
+title: "5_final_data"
+author: "Arturo Bertero"
+date: "2024-04-08"
+output: html_document
+---
+
+```{r}
+library("pacman")
+p_load(tidyverse, here, haven, countrycode, vdemdata, psych, lavaan, ltm,
+       janitor, conflicted)
+
+#conflicts
+conflict_prefer("select", "dplyr")
+conflict_prefer("filter", "dplyr")
+```
+
+
+# Input
+
+```{r}
+# import DV 
+DV = read_rds(here("Input", "final_data", "DV.rds"))
+
+#import IVs
+age_d = read_rds(here("Input", "final_data", "IV", "age_d_long.rds"))
+alt_inf = read_rds(here("Input", "final_data", "IV", "alt_inf_long.rds"))
+educ = read_rds(here("Input", "final_data", "IV", "educ_long.rds"))
+ideol = read_rds(here("Input", "final_data", "IV", "ideol_long.rds"))
+mass_mob = read_rds(here("Input", "final_data", "IV", "mass_mob_long.rds"))
+p_inst_k = read_rds(here("Input", "final_data", "IV", "p_inst_k_long.rds"))
+p_inst = read_rds(here("Input", "final_data", "IV", "p_inst_long.rds"))
+pint = read_rds(here("Input", "final_data", "IV", "pint_long.rds"))
+pola = read_rds(here("Input", "final_data", "IV", "pola_long.rds"))
+turnout = read_rds(here("Input", "final_data", "IV", "turnout_long.rds"))
+IHDI = read_rds(here("Input", "final_data", "IV", "IHDI_long.rds"))
+ENEP = read_rds(here("Input", "final_data", "IV", "ENEP_long.rds"))
+gallagher = read_rds(here("Input", "final_data", "IV", "gallagher_long.rds"))
+```
+
+
+# Processing
+
+## cor df
+
+```{r}
+# select cor Vs
+cor_df = DV %>% 
+  select(country,year,country_year,EES_COR_aspl,EES_COR_constraint,EES_COR_np_i,
+         EES_COR_np_w,EES_CCA,EES_EGA)
+
+# means for belgium
+cor_df <- cor_df %>%
+  group_by(country_year) %>%
+  summarise(across(where(is.numeric), mean, na.rm = TRUE),  
+            across(where(is.character), first)) %>% 
+  select(country, year, country_year, EES_COR_aspl,EES_COR_constraint,EES_COR_np_i,
+         EES_COR_np_w,EES_CCA,EES_EGA)
+
+
+```
+
+```{r}
+#merge 
+
+# Initialize final_data, list of dfs
+final_cor <- cor_df
+data_frames <- list(age_d, alt_inf, educ, ideol, mass_mob, p_inst, p_inst_k, pint,
+                    pola, turnout, IHDI,ENEP, gallagher)
+
+# Loop t
+for(df in data_frames) {
+  # Extract the name of the fourth column
+  col_name <- names(df)[4]
+  
+  # Merge 
+  final_cor <- merge(final_cor, df[, c("country_year", col_name)], by = "country_year", all.x = TRUE)
+}
+
+# manually adjust 0 for DEU 1989 in age_d
+final_cor[23,10] = 0
+
+```
+
+## pcor df
+
+```{r}
+# select cor Vs
+pcor_df = DV %>% 
+  select(country,year,country_year,EES_GGM_glasso_aspl,EES_GGM_glasso_constraint,
+         EES_GGM_glasso_np_i,EES_GGM_glasso_np_w,EES_GGM_huge_aspl,EES_GGM_huge_constraint,
+         EES_GGM_huge_np_i,EES_GGM_huge_np_w,EES_CCA,EES_EGA)
+
+#exclude BEL 1999 which is an empty network
+pcor_df <- pcor_df %>% 
+  slice(-10)
+
+# means for belgium
+pcor_df <- pcor_df %>%
+  group_by(country_year) %>%
+  summarise(across(where(is.numeric), mean, na.rm = TRUE),  
+            across(where(is.character), first)) %>% 
+  select(country,year,country_year,EES_GGM_glasso_aspl,EES_GGM_glasso_constraint,
+         EES_GGM_glasso_np_i,EES_GGM_glasso_np_w,EES_GGM_huge_aspl,EES_GGM_huge_constraint,
+         EES_GGM_huge_np_i,EES_GGM_huge_np_w,EES_CCA,EES_EGA)
+
+```
+
+
+```{r}
+#merge 
+
+# Initialize final_data, list of dfs
+final_pcor <- pcor_df
+data_frames <- list(age_d, alt_inf, educ, ideol, mass_mob, p_inst, p_inst_k, pint,
+                    pola, turnout,IHDI,ENEP, gallagher)
+
+# Loop t
+for(df in data_frames) {
+  # Extract the name of the fourth column
+  col_name <- names(df)[4]
+  
+  # Merge 
+  final_pcor <- merge(final_pcor, df[, c("country_year", col_name)], by = "country_year", all.x = TRUE)
+}
+
+# manually adjust 0 for DEU 1989 in age_d
+final_pcor[23,14] = 0
+
+```
+
+## final
+
+```{r}
+#final merge 
+final = final_pcor
+final$EES_COR_aspl = final_cor$EES_COR_aspl
+final$EES_COR_constraint = final_cor$EES_COR_constraint
+final$EES_COR_np_i = final_cor$EES_COR_np_i
+final$EES_COR_np_w = final_cor$EES_COR_np_w
+```
+
+# Output
+
+```{r}
+saveRDS(final, here("Input", "final_data", "final.rds"))
+```
+

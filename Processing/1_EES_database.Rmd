@@ -142,7 +142,7 @@ list_1994[["29"]] = list_1994[["2"]] %>%
   select(c(t_var_ptv_party9, t_var_ptv_party14, t_var_ptv_party19, t_var_ptv_party24, t_var_ptv_party27, t_var_ptv_party28))
 
 list_1994[["2"]] = list_1994[["2"]] %>% 
-  select(-c(t_var_ptv_party9, t_var_ptv_party14, t_var_ptv_party19, t_var_ptv_party24, t_var_ptv_party27, t_var_ptv_party28))
+  select(-c(t_var_ptv_party9, t_var_ptv_party14, t_var_ptv_party19, t_var_ptv_party24, t_var_ptv_party26, t_var_ptv_party27, t_var_ptv_party28))
 
 #remove NAs
 list_1994 = lapply(list_1994, function(df) {
@@ -311,6 +311,7 @@ list_2014 = lapply(list_2014, function(df) {
            -c(countrycode, p13_intlang))
 })
 
+
 #examine pattern of missing
 map(list_2014, vis_miss)
 
@@ -460,6 +461,9 @@ names(list_2019) = country_codes[names(list_2019)]
 #english names to ISO
 names(list_2014) = countrycode(names(list_2014), "country.name", "iso3c") 
 names(list_2019) = countrycode(names(list_2019), "country.name", "iso3c")
+
+#remove isolate from LUX 2014
+list_2014[["LUX"]][["qpp8_6"]] = NULL
 ```
 
 ## Merge

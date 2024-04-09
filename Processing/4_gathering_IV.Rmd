@@ -43,6 +43,26 @@ IHDI = IHDI %>%
   dplyr::select(iso3, hdi_1990, hdi_1994, hdi_1999, hdi_2004, 
                hdi_2009, hdi_2014, hdi_2019)
 
+# long
+IHDI_long = IHDI %>% 
+  rename(country = iso3, 
+         hdi_1989 = hdi_1990) %>% 
+  pivot_longer(
+    cols = starts_with("hdi_"),
+    names_to = "year",
+    values_to = "ihdi",
+    names_prefix = "hdi_"
+  ) %>%
+  mutate(
+    year = as.integer(year), # Convert year to integer
+    country_year = paste(country, year, sep = "_")
+  ) %>%
+  select(country, year, country_year, ihdi)
+```
+
+## UNPD (years of schooling)
+
+```{r}
 # load UNPD educ data
 educ = read.csv(here("Input", "data", "UPND_educ.csv"))
 
@@ -51,6 +71,22 @@ educ = educ %>%
   filter(iso3 %in% unique_countries$country) %>% 
   select(iso3, mys_1990, mys_1994, mys_1999, mys_2004, mys_2009, 
          mys_2014, mys_2019)
+
+#long format
+educ_long = educ %>%
+  rename(country = iso3,
+         mys_1989 = mys_1990) %>%
+  pivot_longer(
+    cols = starts_with("mys_"),
+    names_to = "year",
+    values_to = "educ",
+    names_prefix = "mys_"
+  ) %>%
+  mutate(
+    year = as.integer(year), # Convert year to integer
+    country_year = paste(country, year, sep = "_")
+  ) %>%
+  select(country, year, country_year, educ)
 
 ```
 
@@ -71,7 +107,7 @@ HIEF = HIEF %>%
          Year == "1999" |
          Year == "2004" |
          Year == "2009" |
-         Year == "2013" )
+         Year == "2014" )
 
 ```
 
@@ -89,10 +125,21 @@ age_d = age_d %>%
          Year == "1999" |
          Year == "2004" |
          Year == "2009" |
-         Year == "2013" |
+         Year == "2014" |
          Year == "2019") %>% 
   select(Code, Year, `Age of democracy`) %>% 
   mutate(`Age of democracy` = ifelse(`Age of democracy` == "non-democracy", 0, `Age of democracy`))
+
+#long
+age_d_long = age_d %>% 
+  rename(country = Code, 
+         year = Year,
+         age_d = `Age of democracy`) %>% 
+  mutate(
+    year = as.integer(year), 
+    country_year = paste(country, year, sep = "_")) %>% 
+  select(country, year, country_year, age_d)
+
 ```
 
 ## ENEP and Gallagher
@@ -100,6 +147,22 @@ age_d = age_d %>%
 ```{r}
 #load 
 ENEP_gallagher = read_delim(here("Input", "data", "enep_gallagher.csv"), delim = ";")
+
+#long
+ENEP_gallagher_together = ENEP_gallagher %>% 
+  rename(country = Country,
+         year = Year) %>% 
+  mutate(year = as.integer(year), 
+    country_year = paste(country, year, sep = "_")) %>% 
+  select(country, year, country_year, gallagher, ENEP)
+
+#ENEP long
+ENEP_long = ENEP_gallagher_together %>%
+  select(-gallagher)
+
+#Gallagher long
+gallagher_long = ENEP_gallagher_together %>% 
+  select(-ENEP)
 ```
 
 ## Turnout
@@ -110,6 +173,23 @@ turnout = read_delim(here("Input", "data", "turnout.csv"), delim = ";")
 
 #fix countries
 turnout$Country = countrycode(turnout$Country, "country.name", "iso3c")
+
+library(tidyverse)
+
+# long
+turnout_long <- turnout %>%
+  rename(country = Country) %>%
+  pivot_longer(
+    cols = c(`1989`, `1994`, `1999`, `2004`, `2009`, `2014`, `2019`), 
+    names_to = "year",
+    values_to = "turnout"
+  ) %>%
+  mutate(
+    year = as.integer(year), 
+    country_year = paste(country, year, sep = "_")
+  ) %>%
+  select(country, year, country_year, turnout)
+
 ```
 ## EES
 
@@ -164,12 +244,12 @@ d_2009 = d_2009 %>%
     t103 == 13 ~ "LTU",
     t103 == 14 ~ "LUX",
     t103 == 15 ~ "HUN",
-    t103 == 16 ~ "MTL",
+    t103 == 16 ~ "MLT",
     t103 == 17 ~ "NLD",
     t103 == 18 ~ "AUT",
     t103 == 19 ~ "POL",
     t103 == 20 ~ "PRT",
-    t103 == 21 ~ "SSN",
+    t103 == 21 ~ "SVN",
     t103 == 22 ~ "SVK",
     t103 == 23 ~ "FIN",
     t103 == 24 ~ "SWE",
@@ -311,6 +391,16 @@ pint <- bind_rows(pol_int, pol_int_2009, pol_int_2014, pol_int_2019)
 pint <- pint %>% 
   mutate(mean_pint = 5 - mean_pint)
 
+#long
+pint_long = pint %>% 
+  rename(country = t_cntry,
+         year = t_ees,
+         pint = mean_pint) %>% 
+  mutate(year = as.integer(year), 
+    country_year = paste(country, year, sep = "_")) %>% 
+  select(country, year, country_year, pint) %>% 
+  na.omit()
+
 ```
 
 
@@ -325,7 +415,7 @@ vdem = vdem %>%
          year == "1999" |
          year == "2004" |
          year == "2009" |
-         year == "2013" |
+         year == "2014" |
          year == "2019")
 
 ```
@@ -385,6 +475,14 @@ alpha = cronbach.alpha(cfa_p_inst)
 ```{r}
 p_inst = p_inst %>% 
   dplyr::select(country_text_id, year, p_inst)
+
+#long
+p_inst_k_long = p_inst %>% 
+  rename(country = country_text_id,
+         p_inst_k = p_inst) %>% 
+  mutate(year = as.integer(year),
+         country_year = paste(country, year, sep = "_")) %>% 
+  select(country, year, country_year, p_inst_k)
 ```
 
 ### ready made p_inst
@@ -398,9 +496,18 @@ p_inst_index = vdem %>%
          year == "1999" |
          year == "2004" |
          year == "2009" |
-         year == "2013" |
+         year == "2014" |
          year == "2019") %>% 
   dplyr::select(country_text_id, year, v2xps_party)
+
+#long 
+p_inst_long = p_inst_index %>% 
+  rename(country = country_text_id,
+         p_inst = v2xps_party) %>% 
+  mutate(year = as.integer(year),
+    country_year = paste(country, year, sep = "_")) %>% 
+  select(country, year, country_year, p_inst)
+
 ```
 
 
@@ -414,9 +521,17 @@ alt_inf = vdem %>%
          year == "1999" |
          year == "2004" |
          year == "2009" |
-         year == "2013" |
+         year == "2014" |
          year == "2019") %>% 
   dplyr::select(country_text_id, year, v2xme_altinf)
+
+#long
+alt_inf_long = alt_inf %>% 
+    rename(country = country_text_id,
+         alt_inf = v2xme_altinf) %>% 
+  mutate(year = as.integer(year),
+    country_year = paste(country, year, sep = "_")) %>% 
+  select(country, year, country_year, alt_inf)
 ```
 
 ### Ideology
@@ -429,13 +544,20 @@ ideol = vdem %>%
          year == "1999" |
          year == "2004" |
          year == "2009" |
-         year == "2013" |
+         year == "2014" |
          year == "2019") %>% 
   dplyr::select(country_text_id, year, v2exl_legitideol)
 
+#long
+ideol_long = ideol %>% 
+  rename(country = country_text_id,
+         ideol = v2exl_legitideol) %>% 
+  mutate(year = as.integer(year),
+    country_year = paste(country, year, sep = "_")) %>% 
+  select(country, year, country_year, ideol)
 ```
 
-### Polarization
+### Polarization 
 
 ```{r}
 pola = vdem %>% 
@@ -445,9 +567,17 @@ pola = vdem %>%
          year == "1999" |
          year == "2004" |
          year == "2009" |
-         year == "2013" |
+         year == "2014" |
          year == "2019") %>% 
   dplyr::select(country_text_id, year, v2cacamps)
+
+#long
+pola_long = pola %>% 
+  rename(country = country_text_id,
+         pola = v2cacamps) %>% 
+  mutate(year = as.integer(year),
+    country_year = paste(country, year, sep = "_")) %>% 
+  select(country, year, country_year, pola)
 ```
 
 ### Mass mobilization
@@ -460,38 +590,36 @@ mass_mob = vdem %>%
          year == "1999" |
          year == "2004" |
          year == "2009" |
-         year == "2013" |
+         year == "2014" |
          year == "2019") %>% 
   dplyr::select(country_text_id, year, v2cagenmob)
+
+#long
+mass_mob_long = mass_mob %>% 
+  rename(country = country_text_id,
+         mass_mob = v2cagenmob) %>% 
+  mutate(year = as.integer(year),
+    country_year = paste(country, year, sep = "_")) %>% 
+  select(country, year, country_year, mass_mob)
 ```
 
-### Party identification
+
+# Output
 
 ```{r}
-party_id = vdem %>% 
-  filter(country_text_id %in% unique_countries$country,
-         year == "1989" |
-         year == "1994" |
-         year == "1999" |
-         year == "2004" |
-         year == "2009" |
-         year == "2013" |
-         year == "2019") %>% 
-  dplyr::select(country_text_id, year, v3partyid)
-```
-
-### Party system religious index
-
-```{r}
-relig = vdem %>% 
-  filter(country_text_id %in% unique_countries$country,
-         year == "1989" |
-         year == "1994" |
-         year == "1999" |
-         year == "2004" |
-         year == "2009" |
-         year == "2013" |
-         year == "2019") %>% 
-  dplyr::select(country_text_id, year, v2xpas_religion)
+#save individual df
+saveRDS(age_d_long, here("Input", "final_data", "IV", "age_d_long.rds"))
+saveRDS(alt_inf_long, here("Input", "final_data", "IV", "alt_inf_long.rds"))
+saveRDS(educ_long, here("Input", "final_data", "IV", "educ_long.rds"))
+saveRDS(ideol_long, here("Input", "final_data", "IV", "ideol_long.rds"))
+saveRDS(mass_mob_long, here("Input", "final_data", "IV", "mass_mob_long.rds"))
+saveRDS(p_inst_k_long, here("Input", "final_data", "IV", "p_inst_k_long.rds"))
+saveRDS(p_inst_long, here("Input", "final_data", "IV", "p_inst_long.rds"))
+saveRDS(pint_long, here("Input", "final_data", "IV", "pint_long.rds"))
+saveRDS(pola_long, here("Input", "final_data", "IV", "pola_long.rds"))
+saveRDS(turnout_long, here("Input", "final_data", "IV", "turnout_long.rds"))
+saveRDS(IHDI_long, here("Input", "final_data", "IV", "IHDI_long.rds"))
+saveRDS(ENEP_long, here("Input", "final_data", "IV", "ENEP_long.rds"))
+saveRDS(gallagher_long, here("Input", "final_data", "IV", "gallagher_long.rds"))
 ```
 

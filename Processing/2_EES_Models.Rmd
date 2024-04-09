@@ -36,7 +36,7 @@ for(year in names(EES)) {
     tryCatch({
       # Attempt to process the data
       country_data = EES[[year]][[country_code]]
-      network_estimate = estimateNetwork(country_data, default = "EBICglasso", tuning = 0.25)
+      network_estimate = estimateNetwork(country_data, default = "EBICglasso", tuning = 0.15)
       
       # If successful, store the result and set the name
       EES_GGM_glasso[[year]][[country_code]] = network_estimate
@@ -81,7 +81,7 @@ for(year in names(EES)) {
     tryCatch({
       # Attempt to process the data
       country_data = EES[[year]][[country_code]]
-      network_estimate = estimateNetwork(country_data, default = "huge", tuning = 0.25)
+      network_estimate = estimateNetwork(country_data, default = "huge", tuning = 0.15)
       
       # If successful, store the result and set the name
       EES_GGM_huge[[year]][[country_code]] = network_estimate
@@ -269,6 +269,7 @@ for (year in names(EES_GGM_glasso)) {
 }
 
 ```
+
 
 # Output
 
