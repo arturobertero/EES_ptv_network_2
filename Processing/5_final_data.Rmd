@@ -8,7 +8,7 @@ output: html_document
 ```{r}
 library("pacman")
 p_load(tidyverse, here, haven, countrycode, vdemdata, psych, lavaan, ltm,
-       janitor, conflicted)
+       janitor, conflicted, stringr)
 
 #conflicts
 conflict_prefer("select", "dplyr")
@@ -138,6 +138,14 @@ final$EES_COR_aspl = final_cor$EES_COR_aspl
 final$EES_COR_constraint = final_cor$EES_COR_constraint
 final$EES_COR_np_i = final_cor$EES_COR_np_i
 final$EES_COR_np_w = final_cor$EES_COR_np_w
+
+#remove asterisks from ENEP and gallagher
+final = final %>% 
+  mutate(across(everything(), ~str_remove_all(.x, "\\*$")))
+
+#all numeric
+final <- final %>%
+  mutate(across(-c(country, year, country_year), as.numeric))
 ```
 
 # Output
@@ -145,4 +153,6 @@ final$EES_COR_np_w = final_cor$EES_COR_np_w
 ```{r}
 saveRDS(final, here("Input", "final_data", "final.rds"))
 ```
+
+
 
