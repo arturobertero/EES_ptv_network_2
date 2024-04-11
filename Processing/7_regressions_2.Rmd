@@ -1,0 +1,451 @@
+---
+title: "7_regressions_2"
+author: "Arturo Bertero"
+date: "2024-04-11"
+output: html_document
+---
+
+```{r}
+library("pacman")
+p_load(tidyverse, here, haven, countrycode, vdemdata, psych, lavaan, ltm,
+       janitor, conflicted, sjPlot)
+
+#conflicts
+conflict_prefer("select", "dplyr")
+conflict_prefer("filter", "dplyr")
+```
+
+# Input
+
+```{r}
+# import final data
+data = read_rds(here("Input", "final_data", "final.rds"))
+
+#as factor
+data$country = as.factor(data$country)
+data$year = as.factor(data$year)
+data$country_year = as.factor(data$country_year)
+
+```
+
+# Processing
+
+## Cor 
+
+### Constraint
+
+```{r}
+cor_constraint_ideol <- lm(EES_COR_constraint ~ ideol + country + year, data = data)
+cor_constraint_mass_mob <- lm(EES_COR_constraint ~ mass_mob + country + year, data = data)
+cor_constraint_pint <- lm(EES_COR_constraint ~ pint + country + year, data = data)
+cor_constraint_pola <- lm(EES_COR_constraint ~ pola + country + year, data = data)
+cor_constraint_gallagher <- lm(EES_COR_constraint ~ gallagher + country + year, data = data)
+```
+
+### ASPL
+
+```{r}
+cor_aspl_mass_mob <- lm(EES_COR_aspl ~ mass_mob + country + year, data = data)
+cor_aspl_p_inst <- lm(EES_COR_aspl ~ p_inst + country + year, data = data)
+cor_aspl_pint <- lm(EES_COR_aspl ~ pint + country + year, data = data)
+cor_aspl_pola <- lm(EES_COR_aspl ~ pola + country + year, data = data)
+```
+
+### np_i
+
+```{r}
+cor_np_i_pint <- lm(EES_COR_np_i ~ pint + country + year, data = data)
+cor_np_i_turnout <- lm(EES_COR_np_i ~ turnout + country + year, data = data)
+```
+
+### np_w
+
+```{r}
+cor_np_w_pint <- lm(EES_COR_np_w ~ pint + country + year, data = data)
+cor_np_w_turnout <- lm(EES_COR_np_w ~ turnout + country + year, data = data)
+```
+
+
+## Glasso
+
+### Constraint
+
+```{r}
+pcor_constraint_p_inst <- lm(EES_GGM_glasso_constraint ~ p_inst + country + year, data = data)
+pcor_constraint_p_inst_k <- lm(EES_GGM_glasso_constraint ~ p_inst_k + country + year, data = data)
+pcor_constraint_turnout <- lm(EES_GGM_glasso_constraint ~ turnout + country + year, data = data)
+pcor_constraint_ENEP <- lm(EES_GGM_glasso_constraint ~ ENEP + country + year, data = data)
+```
+
+### ASPL
+
+```{r}
+pcor_aspl_p_inst <- lm(EES_GGM_glasso_aspl ~ p_inst + country + year, data = data)
+pcor_aspl_p_inst_k <- lm(EES_GGM_glasso_aspl ~ p_inst_k + country + year, data = data)
+pcor_aspl_pint <- lm(EES_GGM_glasso_aspl ~ pint + country + year, data = data)
+pcor_aspl_pola <- lm(EES_GGM_glasso_aspl ~ pola + country + year, data = data)
+```
+
+### np_i
+
+```{r}
+pcor_np_i_turnout <- lm(EES_GGM_glasso_np_i ~ turnout + country + year, data = data)
+```
+
+### np_w
+
+```{r}
+pcor_np_w_turnout <- lm(EES_GGM_glasso_np_w ~ turnout + country + year, data = data)
+```
+
+## Huge
+
+### Constraint
+
+```{r}
+huge_constraint_p_inst <- lm(EES_GGM_huge_constraint ~ p_inst + country + year, data = data)
+huge_constraint_p_inst_k <- lm(EES_GGM_huge_constraint ~ p_inst_k + country + year, data = data)
+huge_constraint_turnout <- lm(EES_GGM_huge_constraint ~ turnout + country + year, data = data)
+```
+
+### ASPL
+
+```{r}
+huge_aspl_p_inst <- lm(EES_GGM_huge_aspl ~ p_inst + country + year, data = data)
+huge_aspl_p_inst_k <- lm(EES_GGM_huge_aspl ~ p_inst_k + country + year, data = data)
+huge_aspl_pint <- lm(EES_GGM_huge_aspl ~ pint + country + year, data = data)
+huge_aspl_pola <- lm(EES_GGM_huge_aspl ~ pola + country + year, data = data)
+```
+
+### np_i
+
+```{r}
+huge_np_i_pint <- lm(EES_GGM_huge_np_i ~ pint + country + year, data = data)
+huge_np_i_turnout <- lm(EES_GGM_huge_np_i ~ turnout + country + year, data = data)
+```
+
+### np_w
+
+```{r}
+huge_np_w_turnout <- lm(EES_GGM_huge_np_w ~ turnout + country + year, data = data)
+```
+
+### EGA
+
+```{r}
+ega_p_inst <- lm(EES_EGA ~ p_inst + country + year, data = data)
+ega_p_inst_k <- lm(EES_EGA ~ p_inst_k + country + year, data = data)
+ega_turnout <- lm(EES_EGA ~ turnout + country + year, data = data)
+```
+
+### CCA
+
+```{r}
+#null
+```
+
+# Stage 2: summing significant predictors
+
+### constraint
+
+```{r}
+# cor
+cor_constraint_2 <- lm(EES_COR_constraint ~ ideol + mass_mob + country + year , data = data)
+cor_constraint_3 <- lm(EES_COR_constraint ~ ideol + mass_mob + pint + country + year , data = data)
+cor_constraint_4 <- lm(EES_COR_constraint ~ ideol + mass_mob + pint + pola + country + year , data = data)
+cor_constraint_5 <- lm(EES_COR_constraint ~ ideol + mass_mob + pint + pola + gallagher + country + year , data = data)
+
+summary(cor_constraint_2)
+summary(cor_constraint_3)
+summary(cor_constraint_4)
+summary(cor_constraint_5)
+```
+
+```{r}
+# glasso
+pcor_constraint_2 <- lm(EES_GGM_glasso_constraint ~ p_inst + ENEP + country + year, data = data)
+pcor_constraint_3 <- lm(EES_GGM_glasso_constraint ~ p_inst_k + ENEP + country + year, data = data)
+pcor_constraint_4 <- lm(EES_GGM_glasso_constraint ~ p_inst + ENEP + turnout + country + year, data = data)
+pcor_constraint_5 <- lm(EES_GGM_glasso_constraint ~ p_inst_k + ENEP + turnout + country + year, data = data)
+
+summary(pcor_constraint_2)
+summary(pcor_constraint_3)
+summary(pcor_constraint_4)
+summary(pcor_constraint_5)
+```
+
+```{r}
+# huge
+huge_constraint_1 <- lm(EES_GGM_huge_constraint ~ p_inst + turnout + country + year, data = data)
+huge_constraint_2 <- lm(EES_GGM_huge_constraint ~ p_inst_k + turnout + country + year, data = data)
+
+summary(huge_constraint_1)
+summary(huge_constraint_2)
+```
+
+### ASPL
+
+```{r}
+# cor
+cor_aspl_1 <- lm(EES_COR_aspl ~ mass_mob + p_inst + country + year, data = data)
+cor_aspl_2 <- lm(EES_COR_aspl ~ mass_mob + p_inst + pint + country + year, data = data)
+cor_aspl_3 <- lm(EES_COR_aspl ~ mass_mob + p_inst + pint + pola + country + year, data = data)
+
+summary(cor_aspl_1)
+summary(cor_aspl_2)
+summary(cor_aspl_3)
+```
+
+```{r}
+# glasso
+pcor_aspl_1 <- lm(EES_GGM_glasso_aspl ~ p_inst + pint + country + year, data = data)
+pcor_aspl_2 <- lm(EES_GGM_glasso_aspl ~ p_inst_k + pint + country + year, data = data)
+pcor_aspl_3 <- lm(EES_GGM_glasso_aspl ~ p_inst + pint + pola + country + year, data = data)
+pcor_aspl_4 <- lm(EES_GGM_glasso_aspl ~ p_inst_k + pint + pola + country + year, data = data)
+
+summary(pcor_aspl_1)
+summary(pcor_aspl_2)
+summary(pcor_aspl_3) #wow
+summary(pcor_aspl_4)
+```
+
+```{r}
+huge_aspl_1 <- lm(EES_GGM_huge_aspl ~ p_inst + pint + country + year, data = data)
+huge_aspl_2 <- lm(EES_GGM_huge_aspl ~ p_inst_k + pint + country + year, data = data)
+huge_aspl_3 <- lm(EES_GGM_huge_aspl ~ p_inst + pint + pola + country + year, data = data)
+huge_aspl_4 <- lm(EES_GGM_huge_aspl ~ p_inst_k + pint + pola + country + year, data = data)
+
+summary(huge_aspl_1)
+summary(huge_aspl_2)
+summary(huge_aspl_3) # wow
+summary(huge_aspl_4)
+
+```
+
+### np_i
+
+```{r}
+# cor
+cor_np_i_2 <- lm(EES_COR_np_i ~ pint + turnout + country + year, data = data)
+
+summary(cor_np_i_2)
+```
+
+```{r}
+# huge
+huge_np_i_2 <- lm(EES_GGM_huge_np_i ~ pint + turnout + country + year, data = data)
+
+summary(huge_np_i_2)
+```
+
+### np_w
+
+```{r}
+# cor
+cor_np_w_2 <- lm(EES_COR_np_w ~ pint + turnout + country + year, data = data)
+
+summary(cor_np_w_2)
+```
+
+# Stage 3: theoretical predictors
+
+## constraint 
+
+```{r}
+# cor
+
+# nested models starting from ideology 
+cor_cons_s3_1 = lm(EES_COR_constraint ~ ideol + ENEP + gallagher + country + year , data = data)
+cor_cons_s3_2 = lm(EES_COR_constraint ~ ideol + mass_mob + ENEP + gallagher + country + year , data = data)
+cor_cons_s3_3 = lm(EES_COR_constraint ~ ideol + mass_mob + p_inst + ENEP + gallagher + country + year , data = data)
+cor_cons_s3_4 = lm(EES_COR_constraint ~ ideol + mass_mob + p_inst + pola + ENEP + gallagher + country + year , data = data)
+cor_cons_s3_5 = lm(EES_COR_constraint ~ ideol + mass_mob + p_inst + pola + pint + ENEP + gallagher + country + year , data = data)
+cor_cons_s3_6 = lm(EES_COR_constraint ~ ideol + mass_mob + p_inst + pola + pint + educ + ENEP + gallagher + country + year , data = data)
+
+# nested models starting from pint
+cor_cons_s3_1_2 = lm(EES_COR_constraint ~ pint + ENEP + gallagher + country + year , data = data)
+cor_cons_s3_2_2 = lm(EES_COR_constraint ~ pint + mass_mob + ENEP + gallagher + country + year , data = data)
+cor_cons_s3_3_2 = lm(EES_COR_constraint ~ pint + mass_mob + p_inst + ENEP + gallagher + country + year , data = data)
+cor_cons_s3_4_2 = lm(EES_COR_constraint ~ pint + mass_mob + p_inst + pola + ENEP + gallagher + country + year , data = data) #best
+cor_cons_s3_5_2 = lm(EES_COR_constraint ~ pint + mass_mob + p_inst + pola + ideol + ENEP + gallagher + country + year , data = data)
+cor_cons_s3_6_2 = lm(EES_COR_constraint ~ pint + mass_mob + p_inst + pola + ideol + educ + ENEP + gallagher + country + year , data = data)
+
+# nested models starting from p_inst
+cor_cons_s3_1_3 = lm(EES_COR_constraint ~ p_inst + ENEP + gallagher + country + year , data = data)
+cor_cons_s3_2_3 = lm(EES_COR_constraint ~ p_inst + ideol + ENEP + gallagher + country + year , data = data)
+cor_cons_s3_3_3 = lm(EES_COR_constraint ~ p_inst + ideol + pint + ENEP + gallagher + country + year , data = data) #best
+cor_cons_s3_4_3 = lm(EES_COR_constraint ~ p_inst + ideol + pint + pola + ENEP + gallagher + country + year , data = data) 
+cor_cons_s3_5_3 = lm(EES_COR_constraint ~ p_inst + ideol + pint + pola + mass_mob + ENEP + gallagher + country + year , data = data)
+cor_cons_s3_6_3 = lm(EES_COR_constraint ~ p_inst + ideol + pint + pola + mass_mob + educ + ENEP + gallagher + country + year , data = data)
+
+summary(cor_cons_s3_5_3)
+
+```
+
+```{r}
+# glasso
+
+# nested models
+pcor_cons_s3_1 = lm(EES_GGM_glasso_constraint ~ p_inst + ENEP + gallagher + country + year , data = data)
+pcor_cons_s3_2 = lm(EES_GGM_glasso_constraint ~ p_inst + mass_mob + ENEP + gallagher + country + year , data = data)
+pcor_cons_s3_3 = lm(EES_GGM_glasso_constraint ~ p_inst + mass_mob + ideol + ENEP + gallagher + country + year , data = data)
+pcor_cons_s3_4 = lm(EES_GGM_glasso_constraint ~ p_inst + mass_mob + ideol + pola + ENEP + gallagher + country + year , data = data)
+pcor_cons_s3_5 = lm(EES_GGM_glasso_constraint ~ p_inst + mass_mob + ideol + pola + pint + ENEP + gallagher + country + year , data = data)
+pcor_cons_s3_6 = lm(EES_GGM_glasso_constraint ~ p_inst + mass_mob + ideol + pola + pint + educ + ENEP + gallagher + country + year , data = data) # best
+
+summary(pcor_cons_s3_6)
+```
+
+```{r}
+# huge
+
+# nested models
+huge_cons_s3_1 = lm(EES_GGM_huge_constraint ~ p_inst + ENEP + gallagher + country + year , data = data)
+huge_cons_s3_2 = lm(EES_GGM_huge_constraint ~ p_inst + mass_mob + ENEP + gallagher + country + year , data = data)
+huge_cons_s3_3 = lm(EES_GGM_huge_constraint ~ p_inst + mass_mob + ideol + ENEP + gallagher + country + year , data = data)
+huge_cons_s3_4 = lm(EES_GGM_huge_constraint ~ p_inst + mass_mob + ideol + pola + ENEP + gallagher + country + year , data = data)
+huge_cons_s3_5 = lm(EES_GGM_huge_constraint ~ p_inst + mass_mob + ideol + pola + pint + ENEP + gallagher + country + year , data = data)
+huge_cons_s3_6 = lm(EES_GGM_huge_constraint ~ p_inst + mass_mob + ideol + pola + pint + educ + ENEP + gallagher + country + year , data = data) # best
+
+summary(huge_cons_s3_5) 
+```
+
+## aspl 
+
+```{r}
+# cor 
+
+# nested models
+cor_aspl_s3_1 = lm(EES_COR_aspl ~ pint + ENEP + gallagher + country + year, data = data)
+cor_aspl_s3_2 = lm(EES_COR_aspl ~ pint + p_inst + ENEP + gallagher + country + year, data = data)
+cor_aspl_s3_3 = lm(EES_COR_aspl ~ pint + p_inst + pola + ENEP + gallagher + country + year, data = data)
+cor_aspl_s3_4 = lm(EES_COR_aspl ~ pint + p_inst + pola + mass_mob + ENEP + gallagher + country + year, data = data) # best
+cor_aspl_s3_5 = lm(EES_COR_aspl ~ pint + p_inst + pola + mass_mob + ideol + ENEP + gallagher + country + year, data = data)
+cor_aspl_s3_6 = lm(EES_COR_aspl ~ pint + p_inst + pola + mass_mob + ideol + educ + ENEP + gallagher + country + year, data = data)
+
+summary(cor_aspl_s3_6)
+```
+
+```{r}
+# pcor 
+
+# nested models
+pcor_aspl_s3_1 = lm(EES_GGM_glasso_aspl ~ pint + ENEP + gallagher + country + year, data = data)
+pcor_aspl_s3_2 = lm(EES_GGM_glasso_aspl ~ pint + p_inst + ENEP + gallagher + country + year, data = data)
+pcor_aspl_s3_3 = lm(EES_GGM_glasso_aspl ~ pint + p_inst + pola + ENEP + gallagher + country + year, data = data)
+pcor_aspl_s3_4 = lm(EES_GGM_glasso_aspl ~ pint + p_inst + pola + mass_mob + ENEP + gallagher + country + year, data = data) 
+pcor_aspl_s3_5 = lm(EES_GGM_glasso_aspl ~ pint + p_inst + pola + mass_mob + ideol + ENEP + gallagher + country + year, data = data)
+pcor_aspl_s3_6 = lm(EES_GGM_glasso_aspl ~ pint + p_inst + pola + mass_mob + ideol + educ + ENEP + gallagher + country + year, data = data) # best
+
+summary(pcor_aspl_s3_6)
+```
+
+```{r}
+# huge
+
+# nested models
+huge_aspl_s3_1 = lm(EES_GGM_huge_aspl ~ pint + ENEP + gallagher + country + year, data = data)
+huge_aspl_s3_2 = lm(EES_GGM_huge_aspl ~ pint + p_inst + ENEP + gallagher + country + year, data = data)
+huge_aspl_s3_3 = lm(EES_GGM_huge_aspl ~ pint + p_inst + pola + ENEP + gallagher + country + year, data = data)
+huge_aspl_s3_4 = lm(EES_GGM_huge_aspl ~ pint + p_inst + pola + mass_mob + ENEP + gallagher + country + year, data = data) 
+huge_aspl_s3_5 = lm(EES_GGM_huge_aspl ~ pint + p_inst + pola + mass_mob + ideol + ENEP + gallagher + country + year, data = data)
+huge_aspl_s3_6 = lm(EES_GGM_huge_aspl ~ pint + p_inst + pola + mass_mob + ideol + educ + ENEP + gallagher + country + year, data = data) # best
+
+summary(huge_aspl_s3_6)
+```
+
+# Output
+
+```{r}
+# tab models for constraint
+tab_model(list(cor_cons_s3_1_3,cor_cons_s3_2_3,cor_cons_s3_3_3,cor_cons_s3_4_3,
+cor_cons_s3_5_3,cor_cons_s3_6_3), 
+          show.p = TRUE,
+          p.style = "stars",
+          p.threshold = c(0.1, 0.05, 0.01),
+          dv.labels = c("M1", "M2", "M3", "M4", "M5", "M6"),
+          collapse.ci = TRUE,
+          show.aic = TRUE,
+          #show.reflvl = TRUE,
+          title = "OLS fixed effects (country and years) on constraint of cor network",
+          string.pred = " ",
+          auto.label = FALSE, 
+          file = here("Output", "regressions", "Regression_1.html")
+)
+
+tab_model(list(pcor_cons_s3_1,pcor_cons_s3_2,pcor_cons_s3_3,pcor_cons_s3_4,
+pcor_cons_s3_5,pcor_cons_s3_6), 
+          show.p = TRUE,
+          p.style = "stars",
+          p.threshold = c(0.1, 0.05, 0.01),
+          dv.labels = c("M1", "M2", "M3", "M4", "M5", "M6"),
+          collapse.ci = TRUE,
+          show.aic = TRUE,
+          #show.reflvl = TRUE,
+          title = "OLS fixed effects (country and years) on constraint of glasso",
+          string.pred = " ",
+          auto.label = FALSE, 
+          file = here("Output", "regressions", "Regression_2.html")
+)
+
+tab_model(list(huge_cons_s3_1,huge_cons_s3_2,huge_cons_s3_3,huge_cons_s3_4,
+huge_cons_s3_5,huge_cons_s3_6), 
+          show.p = TRUE,
+          p.style = "stars",
+          p.threshold = c(0.1, 0.05, 0.01),
+          dv.labels = c("M1", "M2", "M3", "M4", "M5", "M6"),
+          collapse.ci = TRUE,
+          show.aic = TRUE,
+          #show.reflvl = TRUE,
+          title = "OLS fixed effects (country and years) on constraint of huge",
+          string.pred = " ",
+          auto.label = FALSE, 
+          file = here("Output", "regressions", "Regression_3.html")
+)
+
+tab_model(list(cor_aspl_s3_1,cor_aspl_s3_2,cor_aspl_s3_3,cor_aspl_s3_4,
+cor_aspl_s3_5,cor_aspl_s3_6), 
+          show.p = TRUE,
+          p.style = "stars",
+          p.threshold = c(0.1, 0.05, 0.01),
+          dv.labels = c("M1", "M2", "M3", "M4", "M5", "M6"),
+          collapse.ci = TRUE,
+          show.aic = TRUE,
+          #show.reflvl = TRUE,
+          title = "OLS fixed effects (country and years) on aspl of cor network",
+          string.pred = " ",
+          auto.label = FALSE, 
+          file = here("Output", "regressions", "Regression_4.html")
+)
+
+tab_model(list(pcor_aspl_s3_1,pcor_aspl_s3_2,pcor_aspl_s3_3,pcor_aspl_s3_4,
+pcor_aspl_s3_5,pcor_aspl_s3_6), 
+          show.p = TRUE,
+          p.style = "stars",
+          p.threshold = c(0.1, 0.05, 0.01),
+          dv.labels = c("M1", "M2", "M3", "M4", "M5", "M6"),
+          collapse.ci = TRUE,
+          show.aic = TRUE,
+          #show.reflvl = TRUE,
+          title = "OLS fixed effects (country and years) on aspl of glasso network",
+          string.pred = " ",
+          auto.label = FALSE, 
+          file = here("Output", "regressions", "Regression_5.html")
+)
+
+tab_model(list(huge_aspl_s3_1,huge_aspl_s3_2,huge_aspl_s3_3,huge_aspl_s3_4,
+huge_aspl_s3_5,huge_aspl_s3_6), 
+          show.p = TRUE,
+          p.style = "stars",
+          p.threshold = c(0.1, 0.05, 0.01),
+          dv.labels = c("M1", "M2", "M3", "M4", "M5", "M6"),
+          collapse.ci = TRUE,
+          show.aic = TRUE,
+          #show.reflvl = TRUE,
+          title = "OLS fixed effects (country and years) on aspl of huge network",
+          string.pred = " ",
+          auto.label = FALSE, 
+          file = here("Output", "regressions", "Regression_6.html")
+)
+```
+

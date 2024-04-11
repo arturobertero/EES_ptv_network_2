@@ -1,0 +1,1604 @@
+---
+title: "6_regressions"
+author: "Arturo Bertero"
+date: "2024-04-10"
+output: html_document
+---
+
+```{r}
+library("pacman")
+p_load(tidyverse, here, haven, countrycode, vdemdata, psych, lavaan, ltm,
+       janitor, conflicted, sjPlot)
+
+#conflicts
+conflict_prefer("select", "dplyr")
+conflict_prefer("filter", "dplyr")
+```
+
+# Input
+
+```{r}
+# import final data
+data = read_rds(here("Input", "final_data", "final.rds"))
+
+#as factor
+data$country = as.factor(data$country)
+data$year = as.factor(data$year)
+data$country_year = as.factor(data$country_year)
+
+```
+
+# Processing
+
+## Cor
+
+### Constraint
+
+#### Base models
+
+```{r}
+# constraint base model (fixed effects)
+cor_constraint_alt_inf <- lm(EES_COR_constraint ~ alt_inf + country + year, data = data)
+
+# summary
+summary(cor_constraint_alt_inf)
+
+# significant
+```
+
+```{r}
+# constraint base model (fixed effects)
+cor_constraint_educ <- lm(EES_COR_constraint ~ educ + country + year, data = data)
+
+# summary
+summary(cor_constraint_educ)
+```
+
+```{r}
+# constraint base model (fixed effects)
+cor_constraint_ideol <- lm(EES_COR_constraint ~ ideol + country + year, data = data)
+
+# summary
+summary(cor_constraint_ideol)
+
+# significant
+```
+
+```{r}
+# constraint base model (fixed effects)
+cor_constraint_mass_mob <- lm(EES_COR_constraint ~ mass_mob + country + year, data = data)
+
+# summary
+summary(cor_constraint_mass_mob)
+
+#significant
+```
+
+```{r}
+# constraint base model (fixed effects)
+cor_constraint_p_inst <- lm(EES_COR_constraint ~ p_inst + country + year, data = data)
+
+# summary
+summary(cor_constraint_p_inst)
+```
+
+```{r}
+cor_constraint_p_inst_k <- lm(EES_COR_constraint ~ p_inst_k + country + year, data = data)
+
+# summary
+summary(cor_constraint_p_inst_k)
+```
+
+```{r}
+# constraint base model (fixed effects)
+cor_constraint_pint <- lm(EES_COR_constraint ~ pint + country + year, data = data)
+
+# summary
+summary(cor_constraint_pint)
+
+#significant
+```
+
+```{r}
+# constraint base model (fixed effects)
+cor_constraint_pola <- lm(EES_COR_constraint ~ pola + country + year, data = data)
+
+# summary
+summary(cor_constraint_pola)
+
+# significant
+```
+
+```{r}
+# constraint base model (fixed effects)
+cor_constraint_turnout <- lm(EES_COR_constraint ~ turnout + country + year, data = data)
+
+# summary
+summary(cor_constraint_turnout)
+
+```
+
+```{r}
+# constraint base model (fixed effects)
+cor_constraint_ihdi <- lm(EES_COR_constraint ~ ihdi + country + year, data = data)
+
+# summary
+summary(cor_constraint_ihdi)
+
+```
+
+```{r}
+# constraint base model (fixed effects)
+cor_constraint_ENEP <- lm(EES_COR_constraint ~ ENEP + country + year, data = data)
+
+# summary
+summary(cor_constraint_ENEP)
+```
+
+```{r}
+# constraint base model (fixed effects)
+cor_constraint_gallagher <- lm(EES_COR_constraint ~ gallagher + country + year, data = data)
+
+# summary
+summary(cor_constraint_gallagher)
+
+# significant
+```
+
+### ASPL
+
+#### Base models
+
+```{r}
+# aspl base model (fixed effects)
+cor_aspl_alt_inf <- lm(EES_COR_aspl ~ alt_inf + country + year, data = data)
+
+# summary
+summary(cor_aspl_alt_inf)
+
+```
+
+```{r}
+# aspl base model (fixed effects)
+cor_aspl_educ <- lm(EES_COR_aspl ~ educ + country + year, data = data)
+
+# summary
+summary(cor_aspl_educ)
+```
+
+```{r}
+# aspl base model (fixed effects)
+cor_aspl_ideol <- lm(EES_COR_aspl ~ ideol + country + year, data = data)
+
+# summary
+summary(cor_aspl_ideol)
+
+```
+
+```{r}
+# aspl base model (fixed effects)
+cor_aspl_mass_mob <- lm(EES_COR_aspl ~ mass_mob + country + year, data = data)
+
+# summary
+summary(cor_aspl_mass_mob)
+
+#significant
+```
+
+```{r}
+# aspl base model (fixed effects)
+cor_aspl_p_inst <- lm(EES_COR_aspl ~ p_inst + country + year, data = data)
+
+# summary
+summary(cor_aspl_p_inst)
+
+# significant
+```
+
+```{r}
+cor_aspl_p_inst_k <- lm(EES_COR_aspl ~ p_inst_k + country + year, data = data)
+
+# summary
+summary(cor_aspl_p_inst_k)
+```
+
+```{r}
+# aspl base model (fixed effects)
+cor_aspl_pint <- lm(EES_COR_aspl ~ pint + country + year, data = data)
+
+# summary
+summary(cor_aspl_pint)
+
+#significant
+```
+
+```{r}
+# aspl base model (fixed effects)
+cor_aspl_pola <- lm(EES_COR_aspl ~ pola + country + year, data = data)
+
+# summary
+summary(cor_aspl_pola)
+
+# significant
+```
+
+```{r}
+# aspl base model (fixed effects)
+cor_aspl_turnout <- lm(EES_COR_aspl ~ turnout + country + year, data = data)
+
+# summary
+summary(cor_aspl_turnout)
+
+```
+
+```{r}
+# aspl base model (fixed effects)
+cor_aspl_ihdi <- lm(EES_COR_aspl ~ ihdi + country + year, data = data)
+
+# summary
+summary(cor_aspl_ihdi)
+
+```
+
+```{r}
+# aspl base model (fixed effects)
+cor_aspl_ENEP <- lm(EES_COR_aspl ~ ENEP + country + year, data = data)
+
+# summary
+summary(cor_aspl_ENEP)
+```
+
+```{r}
+# aspl base model (fixed effects)
+cor_aspl_gallagher <- lm(EES_COR_aspl ~ gallagher + country + year, data = data)
+
+# summary
+summary(cor_aspl_gallagher)
+
+```
+
+### NP_I
+
+#### Base models
+
+```{r}
+# np_i base model (fixed effects)
+cor_np_i_alt_inf <- lm(EES_COR_np_i ~ alt_inf + country + year, data = data)
+
+# summary
+summary(cor_np_i_alt_inf)
+
+```
+
+```{r}
+# np_i base model (fixed effects)
+cor_np_i_educ <- lm(EES_COR_np_i ~ educ + country + year, data = data)
+
+# summary
+summary(cor_np_i_educ)
+```
+
+```{r}
+# np_i base model (fixed effects)
+cor_np_i_ideol <- lm(EES_COR_np_i ~ ideol + country + year, data = data)
+
+# summary
+summary(cor_np_i_ideol)
+
+```
+
+```{r}
+# np_i base model (fixed effects)
+cor_np_i_mass_mob <- lm(EES_COR_np_i ~ mass_mob + country + year, data = data)
+
+# summary
+summary(cor_np_i_mass_mob)
+
+```
+
+```{r}
+# np_i base model (fixed effects)
+cor_np_i_p_inst <- lm(EES_COR_np_i ~ p_inst + country + year, data = data)
+
+# summary
+summary(cor_np_i_p_inst)
+
+# significant
+```
+
+```{r}
+cor_np_i_p_inst_k <- lm(EES_COR_np_i ~ p_inst_k + country + year, data = data)
+
+# summary
+summary(cor_np_i_p_inst_k)
+```
+
+```{r}
+# np_i base model (fixed effects)
+cor_np_i_pint <- lm(EES_COR_np_i ~ pint + country + year, data = data)
+
+# summary
+summary(cor_np_i_pint)
+
+#significant
+```
+
+```{r}
+# np_i base model (fixed effects)
+cor_np_i_pola <- lm(EES_COR_np_i ~ pola + country + year, data = data)
+
+# summary
+summary(cor_np_i_pola)
+
+```
+
+```{r}
+# np_i base model (fixed effects)
+cor_np_i_turnout <- lm(EES_COR_np_i ~ turnout + country + year, data = data)
+
+# summary
+summary(cor_np_i_turnout)
+
+# significant
+```
+
+```{r}
+# np_i base model (fixed effects)
+cor_np_i_ihdi <- lm(EES_COR_np_i ~ ihdi + country + year, data = data)
+
+# summary
+summary(cor_np_i_ihdi)
+
+```
+
+```{r}
+# np_i base model (fixed effects)
+cor_np_i_ENEP <- lm(EES_COR_np_i ~ ENEP + country + year, data = data)
+
+# summary
+summary(cor_np_i_ENEP)
+```
+
+```{r}
+# np_i base model (fixed effects)
+cor_np_i_gallagher <- lm(EES_COR_np_i ~ gallagher + country + year, data = data)
+
+# summary
+summary(cor_np_i_gallagher)
+
+```
+
+### NP_W
+
+#### Base models
+
+```{r}
+# np_w base model (fixed effects)
+cor_np_w_alt_inf <- lm(EES_COR_np_w ~ alt_inf + country + year, data = data)
+
+# summary
+summary(cor_np_w_alt_inf)
+
+```
+
+```{r}
+# np_w base model (fixed effects)
+cor_np_w_educ <- lm(EES_COR_np_w ~ educ + country + year, data = data)
+
+# summary
+summary(cor_np_w_educ)
+```
+
+```{r}
+# np_w base model (fixed effects)
+cor_np_w_ideol <- lm(EES_COR_np_w ~ ideol + country + year, data = data)
+
+# summary
+summary(cor_np_w_ideol)
+
+```
+
+```{r}
+# np_w base model (fixed effects)
+cor_np_w_mass_mob <- lm(EES_COR_np_w ~ mass_mob + country + year, data = data)
+
+# summary
+summary(cor_np_w_mass_mob)
+
+```
+
+```{r}
+# np_w base model (fixed effects)
+cor_np_w_p_inst <- lm(EES_COR_np_w ~ p_inst + country + year, data = data)
+
+# summary
+summary(cor_np_w_p_inst)
+
+```
+
+```{r}
+cor_np_w_p_inst_k <- lm(EES_COR_np_w ~ p_inst_k + country + year, data = data)
+
+# summary
+summary(cor_np_w_p_inst_k)
+```
+
+```{r}
+# np_w base model (fixed effects)
+cor_np_w_pint <- lm(EES_COR_np_w ~ pint + country + year, data = data)
+
+# summary
+summary(cor_np_w_pint)
+
+#significant
+```
+
+```{r}
+# np_w base model (fixed effects)
+cor_np_w_pola <- lm(EES_COR_np_w ~ pola + country + year, data = data)
+
+# summary
+summary(cor_np_w_pola)
+
+```
+
+```{r}
+# np_w base model (fixed effects)
+cor_np_w_turnout <- lm(EES_COR_np_w ~ turnout + country + year, data = data)
+
+# summary
+summary(cor_np_w_turnout)
+
+# significant
+```
+
+```{r}
+# np_w base model (fixed effects)
+cor_np_w_ihdi <- lm(EES_COR_np_w ~ ihdi + country + year, data = data)
+
+# summary
+summary(cor_np_w_ihdi)
+
+```
+
+```{r}
+# np_w base model (fixed effects)
+cor_np_w_ENEP <- lm(EES_COR_np_w ~ ENEP + country + year, data = data)
+
+# summary
+summary(cor_np_w_ENEP)
+```
+
+```{r}
+# np_w base model (fixed effects)
+cor_np_w_gallagher <- lm(EES_COR_np_w ~ gallagher + country + year, data = data)
+
+# summary
+summary(cor_np_w_gallagher)
+
+```
+
+## Glasso
+
+### Constraint
+
+#### Base models
+
+```{r}
+# constraint base model (fixed effects)
+pcor_constraint_alt_inf <- lm(EES_GGM_glasso_constraint ~ alt_inf + country + year, data = data)
+
+# summary
+summary(pcor_constraint_alt_inf)
+
+```
+
+```{r}
+# constraint base model (fixed effects)
+pcor_constraint_educ <- lm(EES_GGM_glasso_constraint ~ educ + country + year, data = data)
+
+# summary
+summary(pcor_constraint_educ)
+```
+
+```{r}
+# constraint base model (fixed effects)
+pcor_constraint_ideol <- lm(EES_GGM_glasso_constraint ~ ideol + country + year, data = data)
+
+# summary
+summary(pcor_constraint_ideol)
+
+
+```
+
+```{r}
+# constraint base model (fixed effects)
+pcor_constraint_mass_mob <- lm(EES_GGM_glasso_constraint ~ mass_mob + country + year, data = data)
+
+# summary
+summary(pcor_constraint_mass_mob)
+
+```
+
+```{r}
+# constraint base model (fixed effects)
+pcor_constraint_p_inst <- lm(EES_GGM_glasso_constraint ~ p_inst + country + year, data = data)
+
+# summary
+summary(pcor_constraint_p_inst)
+
+# significant
+```
+
+```{r}
+pcor_constraint_p_inst_k <- lm(EES_GGM_glasso_constraint ~ p_inst_k + country + year, data = data)
+
+# summary
+summary(pcor_constraint_p_inst_k)
+
+# significant
+```
+
+```{r}
+# constraint base model (fixed effects)
+pcor_constraint_pint <- lm(EES_GGM_glasso_constraint ~ pint + country + year, data = data)
+
+# summary
+summary(pcor_constraint_pint)
+
+```
+
+```{r}
+# constraint base model (fixed effects)
+pcor_constraint_pola <- lm(EES_GGM_glasso_constraint ~ pola + country + year, data = data)
+
+# summary
+summary(pcor_constraint_pola)
+
+
+```
+
+```{r}
+# constraint base model (fixed effects)
+pcor_constraint_turnout <- lm(EES_GGM_glasso_constraint ~ turnout + country + year, data = data)
+
+# summary
+summary(pcor_constraint_turnout)
+
+# significant
+```
+
+```{r}
+# constraint base model (fixed effects)
+pcor_constraint_ihdi <- lm(EES_GGM_glasso_constraint ~ ihdi + country + year, data = data)
+
+# summary
+summary(pcor_constraint_ihdi)
+
+```
+
+```{r}
+# constraint base model (fixed effects)
+pcor_constraint_ENEP <- lm(EES_GGM_glasso_constraint ~ ENEP + country + year, data = data)
+
+# summary
+summary(pcor_constraint_ENEP)
+
+# significant
+```
+
+```{r}
+# constraint base model (fixed effects)
+pcor_constraint_gallagher <- lm(EES_GGM_glasso_constraint ~ gallagher + country + year, data = data)
+
+# summary
+summary(pcor_constraint_gallagher)
+
+```
+
+### ASPL
+
+#### Base models
+
+```{r}
+# aspl base model (fixed effects)
+pcor_aspl_alt_inf <- lm(EES_GGM_glasso_aspl ~ alt_inf + country + year, data = data)
+
+# summary
+summary(pcor_aspl_alt_inf)
+
+```
+
+```{r}
+# aspl base model (fixed effects)
+pcor_aspl_educ <- lm(EES_GGM_glasso_aspl ~ educ + country + year, data = data)
+
+# summary
+summary(pcor_aspl_educ)
+```
+
+```{r}
+# aspl base model (fixed effects)
+pcor_aspl_ideol <- lm(EES_GGM_glasso_aspl ~ ideol + country + year, data = data)
+
+# summary
+summary(pcor_aspl_ideol)
+
+```
+
+```{r}
+# aspl base model (fixed effects)
+pcor_aspl_mass_mob <- lm(EES_GGM_glasso_aspl ~ mass_mob + country + year, data = data)
+
+# summary
+summary(pcor_aspl_mass_mob)
+
+#significant
+```
+
+```{r}
+# aspl base model (fixed effects)
+pcor_aspl_p_inst <- lm(EES_GGM_glasso_aspl ~ p_inst + country + year, data = data)
+
+# summary
+summary(pcor_aspl_p_inst)
+
+# significant
+```
+
+```{r}
+pcor_aspl_p_inst_k <- lm(EES_GGM_glasso_aspl ~ p_inst_k + country + year, data = data)
+
+# summary
+summary(pcor_aspl_p_inst_k)
+
+# significant
+```
+
+```{r}
+# aspl base model (fixed effects)
+pcor_aspl_pint <- lm(EES_GGM_glasso_aspl ~ pint + country + year, data = data)
+
+# summary
+summary(pcor_aspl_pint)
+
+#significant
+```
+
+```{r}
+# aspl base model (fixed effects)
+pcor_aspl_pola <- lm(EES_GGM_glasso_aspl ~ pola + country + year, data = data)
+
+# summary
+summary(pcor_aspl_pola)
+
+# significant
+```
+
+```{r}
+# aspl base model (fixed effects)
+pcor_aspl_turnout <- lm(EES_GGM_glasso_aspl ~ turnout + country + year, data = data)
+
+# summary
+summary(pcor_aspl_turnout)
+
+```
+
+```{r}
+# aspl base model (fixed effects)
+pcor_aspl_ihdi <- lm(EES_GGM_glasso_aspl ~ ihdi + country + year, data = data)
+
+# summary
+summary(pcor_aspl_ihdi)
+
+```
+
+```{r}
+# aspl base model (fixed effects)
+pcor_aspl_ENEP <- lm(EES_GGM_glasso_aspl ~ ENEP + country + year, data = data)
+
+# summary
+summary(pcor_aspl_ENEP)
+```
+
+```{r}
+# aspl base model (fixed effects)
+pcor_aspl_gallagher <- lm(EES_GGM_glasso_aspl ~ gallagher + country + year, data = data)
+
+# summary
+summary(pcor_aspl_gallagher)
+
+```
+
+### NP_I
+
+#### Base models
+
+```{r}
+# np_i base model (fixed effects)
+pcor_np_i_alt_inf <- lm(EES_GGM_glasso_np_i ~ alt_inf + country + year, data = data)
+
+# summary
+summary(pcor_np_i_alt_inf)
+
+```
+
+```{r}
+# np_i base model (fixed effects)
+pcor_np_i_educ <- lm(EES_GGM_glasso_np_i ~ educ + country + year, data = data)
+
+# summary
+summary(pcor_np_i_educ)
+```
+
+```{r}
+# np_i base model (fixed effects)
+pcor_np_i_ideol <- lm(EES_GGM_glasso_np_i ~ ideol + country + year, data = data)
+
+# summary
+summary(pcor_np_i_ideol)
+
+```
+
+```{r}
+# np_i base model (fixed effects)
+pcor_np_i_mass_mob <- lm(EES_GGM_glasso_np_i ~ mass_mob + country + year, data = data)
+
+# summary
+summary(pcor_np_i_mass_mob)
+
+```
+
+```{r}
+# np_i base model (fixed effects)
+pcor_np_i_p_inst <- lm(EES_GGM_glasso_np_i ~ p_inst + country + year, data = data)
+
+# summary
+summary(pcor_np_i_p_inst)
+
+
+```
+
+```{r}
+pcor_np_i_p_inst_k <- lm(EES_GGM_glasso_np_i ~ p_inst_k + country + year, data = data)
+
+# summary
+summary(pcor_np_i_p_inst_k)
+```
+
+```{r}
+# np_i base model (fixed effects)
+pcor_np_i_pint <- lm(EES_GGM_glasso_np_i ~ pint + country + year, data = data)
+
+# summary
+summary(pcor_np_i_pint)
+
+#significant
+```
+
+```{r}
+# np_i base model (fixed effects)
+pcor_np_i_pola <- lm(EES_GGM_glasso_np_i ~ pola + country + year, data = data)
+
+# summary
+summary(pcor_np_i_pola)
+
+```
+
+```{r}
+# np_i base model (fixed effects)
+pcor_np_i_turnout <- lm(EES_GGM_glasso_np_i ~ turnout + country + year, data = data)
+
+# summary
+summary(pcor_np_i_turnout)
+
+# significant
+```
+
+```{r}
+# np_i base model (fixed effects)
+pcor_np_i_ihdi <- lm(EES_GGM_glasso_np_i ~ ihdi + country + year, data = data)
+
+# summary
+summary(pcor_np_i_ihdi)
+
+```
+
+```{r}
+# np_i base model (fixed effects)
+pcor_np_i_ENEP <- lm(EES_GGM_glasso_np_i ~ ENEP + country + year, data = data)
+
+# summary
+summary(pcor_np_i_ENEP)
+```
+
+```{r}
+# np_i base model (fixed effects)
+pcor_np_i_gallagher <- lm(EES_GGM_glasso_np_i ~ gallagher + country + year, data = data)
+
+# summary
+summary(pcor_np_i_gallagher)
+
+```
+
+### NP_W
+
+#### Base models
+
+```{r}
+# np_w base model (fixed effects)
+pcor_np_w_alt_inf <- lm(EES_GGM_glasso_np_w ~ alt_inf + country + year, data = data)
+
+# summary
+summary(pcor_np_w_alt_inf)
+
+```
+
+```{r}
+# np_w base model (fixed effects)
+pcor_np_w_educ <- lm(EES_GGM_glasso_np_w ~ educ + country + year, data = data)
+
+# summary
+summary(pcor_np_w_educ)
+```
+
+```{r}
+# np_w base model (fixed effects)
+pcor_np_w_ideol <- lm(EES_GGM_glasso_np_w ~ ideol + country + year, data = data)
+
+# summary
+summary(pcor_np_w_ideol)
+
+```
+
+```{r}
+# np_w base model (fixed effects)
+pcor_np_w_mass_mob <- lm(EES_GGM_glasso_np_w ~ mass_mob + country + year, data = data)
+
+# summary
+summary(pcor_np_w_mass_mob)
+
+```
+
+```{r}
+# np_w base model (fixed effects)
+pcor_np_w_p_inst <- lm(EES_GGM_glasso_np_w ~ p_inst + country + year, data = data)
+
+# summary
+summary(pcor_np_w_p_inst)
+
+```
+
+```{r}
+pcor_np_w_p_inst_k <- lm(EES_GGM_glasso_np_w ~ p_inst_k + country + year, data = data)
+
+# summary
+summary(pcor_np_w_p_inst_k)
+```
+
+```{r}
+# np_w base model (fixed effects)
+pcor_np_w_pint <- lm(EES_GGM_glasso_np_w ~ pint + country + year, data = data)
+
+# summary
+summary(pcor_np_w_pint)
+
+
+```
+
+```{r}
+# np_w base model (fixed effects)
+pcor_np_w_pola <- lm(EES_GGM_glasso_np_w ~ pola + country + year, data = data)
+
+# summary
+summary(pcor_np_w_pola)
+
+```
+
+```{r}
+# np_w base model (fixed effects)
+pcor_np_w_turnout <- lm(EES_GGM_glasso_np_w ~ turnout + country + year, data = data)
+
+# summary
+summary(pcor_np_w_turnout)
+
+# significant
+```
+
+```{r}
+# np_w base model (fixed effects)
+pcor_np_w_ihdi <- lm(EES_GGM_glasso_np_w ~ ihdi + country + year, data = data)
+
+# summary
+summary(pcor_np_w_ihdi)
+
+```
+
+```{r}
+# np_w base model (fixed effects)
+pcor_np_w_ENEP <- lm(EES_GGM_glasso_np_w ~ ENEP + country + year, data = data)
+
+# summary
+summary(pcor_np_w_ENEP)
+```
+
+```{r}
+# np_w base model (fixed effects)
+pcor_np_w_gallagher <- lm(EES_GGM_glasso_np_w ~ gallagher + country + year, data = data)
+
+# summary
+summary(pcor_np_w_gallagher)
+
+```
+
+## Huge
+
+### Constraint
+
+#### Base models
+
+```{r}
+# constraint base model (fixed effects)
+huge_constraint_alt_inf <- lm(EES_GGM_huge_constraint ~ alt_inf + country + year, data = data)
+
+# summary
+summary(huge_constraint_alt_inf)
+
+```
+
+```{r}
+# constraint base model (fixed effects)
+huge_constraint_educ <- lm(EES_GGM_huge_constraint ~ educ + country + year, data = data)
+
+# summary
+summary(huge_constraint_educ)
+```
+
+```{r}
+# constraint base model (fixed effects)
+huge_constraint_ideol <- lm(EES_GGM_huge_constraint ~ ideol + country + year, data = data)
+
+# summary
+summary(huge_constraint_ideol)
+
+
+```
+
+```{r}
+# constraint base model (fixed effects)
+huge_constraint_mass_mob <- lm(EES_GGM_huge_constraint ~ mass_mob + country + year, data = data)
+
+# summary
+summary(huge_constraint_mass_mob)
+
+```
+
+```{r}
+# constraint base model (fixed effects)
+huge_constraint_p_inst <- lm(EES_GGM_huge_constraint ~ p_inst + country + year, data = data)
+
+# summary
+summary(huge_constraint_p_inst)
+
+# significant
+```
+
+```{r}
+huge_constraint_p_inst_k <- lm(EES_GGM_huge_constraint ~ p_inst_k + country + year, data = data)
+
+# summary
+summary(huge_constraint_p_inst_k)
+
+# significant
+```
+
+```{r}
+# constraint base model (fixed effects)
+huge_constraint_pint <- lm(EES_GGM_huge_constraint ~ pint + country + year, data = data)
+
+# summary
+summary(huge_constraint_pint)
+
+```
+
+```{r}
+# constraint base model (fixed effects)
+huge_constraint_pola <- lm(EES_GGM_huge_constraint ~ pola + country + year, data = data)
+
+# summary
+summary(huge_constraint_pola)
+
+
+```
+
+```{r}
+# constraint base model (fixed effects)
+huge_constraint_turnout <- lm(EES_GGM_huge_constraint ~ turnout + country + year, data = data)
+
+# summary
+summary(huge_constraint_turnout)
+
+# significant
+```
+
+```{r}
+# constraint base model (fixed effects)
+huge_constraint_ihdi <- lm(EES_GGM_huge_constraint ~ ihdi + country + year, data = data)
+
+# summary
+summary(huge_constraint_ihdi)
+
+```
+
+```{r}
+# constraint base model (fixed effects)
+huge_constraint_ENEP <- lm(EES_GGM_huge_constraint ~ ENEP + country + year, data = data)
+
+# summary
+summary(huge_constraint_ENEP)
+
+```
+
+```{r}
+# constraint base model (fixed effects)
+huge_constraint_gallagher <- lm(EES_GGM_huge_constraint ~ gallagher + country + year, data = data)
+
+# summary
+summary(huge_constraint_gallagher)
+
+```
+
+### ASPL
+
+#### Base models
+
+```{r}
+# aspl base model (fixed effects)
+huge_aspl_alt_inf <- lm(EES_GGM_huge_aspl ~ alt_inf + country + year, data = data)
+
+# summary
+summary(huge_aspl_alt_inf)
+
+```
+
+```{r}
+# aspl base model (fixed effects)
+huge_aspl_educ <- lm(EES_GGM_huge_aspl ~ educ + country + year, data = data)
+
+# summary
+summary(huge_aspl_educ)
+```
+
+```{r}
+# aspl base model (fixed effects)
+huge_aspl_ideol <- lm(EES_GGM_huge_aspl ~ ideol + country + year, data = data)
+
+# summary
+summary(huge_aspl_ideol)
+
+```
+
+```{r}
+# aspl base model (fixed effects)
+huge_aspl_mass_mob <- lm(EES_GGM_huge_aspl ~ mass_mob + country + year, data = data)
+
+# summary
+summary(huge_aspl_mass_mob)
+
+```
+
+```{r}
+# aspl base model (fixed effects)
+huge_aspl_p_inst <- lm(EES_GGM_huge_aspl ~ p_inst + country + year, data = data)
+
+# summary
+summary(huge_aspl_p_inst)
+
+# significant
+```
+
+```{r}
+huge_aspl_p_inst_k <- lm(EES_GGM_huge_aspl ~ p_inst_k + country + year, data = data)
+
+# summary
+summary(huge_aspl_p_inst_k)
+
+# significant
+```
+
+```{r}
+# aspl base model (fixed effects)
+huge_aspl_pint <- lm(EES_GGM_huge_aspl ~ pint + country + year, data = data)
+
+# summary
+summary(huge_aspl_pint)
+
+#significant
+```
+
+```{r}
+# aspl base model (fixed effects)
+huge_aspl_pola <- lm(EES_GGM_huge_aspl ~ pola + country + year, data = data)
+
+# summary
+summary(huge_aspl_pola)
+
+# significant
+```
+
+```{r}
+# aspl base model (fixed effects)
+huge_aspl_turnout <- lm(EES_GGM_huge_aspl ~ turnout + country + year, data = data)
+
+# summary
+summary(huge_aspl_turnout)
+
+```
+
+```{r}
+# aspl base model (fixed effects)
+huge_aspl_ihdi <- lm(EES_GGM_huge_aspl ~ ihdi + country + year, data = data)
+
+# summary
+summary(huge_aspl_ihdi)
+
+```
+
+```{r}
+# aspl base model (fixed effects)
+huge_aspl_ENEP <- lm(EES_GGM_huge_aspl ~ ENEP + country + year, data = data)
+
+# summary
+summary(huge_aspl_ENEP)
+```
+
+```{r}
+# aspl base model (fixed effects)
+huge_aspl_gallagher <- lm(EES_GGM_huge_aspl ~ gallagher + country + year, data = data)
+
+# summary
+summary(huge_aspl_gallagher)
+
+```
+
+### NP_I
+
+#### Base models
+
+```{r}
+# np_i base model (fixed effects)
+huge_np_i_alt_inf <- lm(EES_GGM_huge_np_i ~ alt_inf + country + year, data = data)
+
+# summary
+summary(huge_np_i_alt_inf)
+
+```
+
+```{r}
+# np_i base model (fixed effects)
+huge_np_i_educ <- lm(EES_GGM_huge_np_i ~ educ + country + year, data = data)
+
+# summary
+summary(huge_np_i_educ)
+```
+
+```{r}
+# np_i base model (fixed effects)
+huge_np_i_ideol <- lm(EES_GGM_huge_np_i ~ ideol + country + year, data = data)
+
+# summary
+summary(huge_np_i_ideol)
+
+```
+
+```{r}
+# np_i base model (fixed effects)
+huge_np_i_mass_mob <- lm(EES_GGM_huge_np_i ~ mass_mob + country + year, data = data)
+
+# summary
+summary(huge_np_i_mass_mob)
+
+```
+
+```{r}
+# np_i base model (fixed effects)
+huge_np_i_p_inst <- lm(EES_GGM_huge_np_i ~ p_inst + country + year, data = data)
+
+# summary
+summary(huge_np_i_p_inst)
+
+
+```
+
+```{r}
+huge_np_i_p_inst_k <- lm(EES_GGM_huge_np_i ~ p_inst_k + country + year, data = data)
+
+# summary
+summary(huge_np_i_p_inst_k)
+```
+
+```{r}
+# np_i base model (fixed effects)
+huge_np_i_pint <- lm(EES_GGM_huge_np_i ~ pint + country + year, data = data)
+
+# summary
+summary(huge_np_i_pint)
+
+#significant
+```
+
+```{r}
+# np_i base model (fixed effects)
+huge_np_i_pola <- lm(EES_GGM_huge_np_i ~ pola + country + year, data = data)
+
+# summary
+summary(huge_np_i_pola)
+
+```
+
+```{r}
+# np_i base model (fixed effects)
+huge_np_i_turnout <- lm(EES_GGM_huge_np_i ~ turnout + country + year, data = data)
+
+# summary
+summary(huge_np_i_turnout)
+
+# significant
+```
+
+```{r}
+# np_i base model (fixed effects)
+huge_np_i_ihdi <- lm(EES_GGM_huge_np_i ~ ihdi + country + year, data = data)
+
+# summary
+summary(huge_np_i_ihdi)
+
+```
+
+```{r}
+# np_i base model (fixed effects)
+huge_np_i_ENEP <- lm(EES_GGM_huge_np_i ~ ENEP + country + year, data = data)
+
+# summary
+summary(huge_np_i_ENEP)
+```
+
+```{r}
+# np_i base model (fixed effects)
+huge_np_i_gallagher <- lm(EES_GGM_huge_np_i ~ gallagher + country + year, data = data)
+
+# summary
+summary(huge_np_i_gallagher)
+
+```
+
+### NP_W
+
+#### Base models
+
+```{r}
+# np_w base model (fixed effects)
+huge_np_w_alt_inf <- lm(EES_GGM_huge_np_w ~ alt_inf + country + year, data = data)
+
+# summary
+summary(huge_np_w_alt_inf)
+
+```
+
+```{r}
+# np_w base model (fixed effects)
+huge_np_w_educ <- lm(EES_GGM_huge_np_w ~ educ + country + year, data = data)
+
+# summary
+summary(huge_np_w_educ)
+```
+
+```{r}
+# np_w base model (fixed effects)
+huge_np_w_ideol <- lm(EES_GGM_huge_np_w ~ ideol + country + year, data = data)
+
+# summary
+summary(huge_np_w_ideol)
+
+```
+
+```{r}
+# np_w base model (fixed effects)
+huge_np_w_mass_mob <- lm(EES_GGM_huge_np_w ~ mass_mob + country + year, data = data)
+
+# summary
+summary(huge_np_w_mass_mob)
+
+```
+
+```{r}
+# np_w base model (fixed effects)
+huge_np_w_p_inst <- lm(EES_GGM_huge_np_w ~ p_inst + country + year, data = data)
+
+# summary
+summary(huge_np_w_p_inst)
+
+```
+
+```{r}
+huge_np_w_p_inst_k <- lm(EES_GGM_huge_np_w ~ p_inst_k + country + year, data = data)
+
+# summary
+summary(huge_np_w_p_inst_k)
+```
+
+```{r}
+# np_w base model (fixed effects)
+huge_np_w_pint <- lm(EES_GGM_huge_np_w ~ pint + country + year, data = data)
+
+# summary
+summary(huge_np_w_pint)
+
+
+```
+
+```{r}
+# np_w base model (fixed effects)
+huge_np_w_pola <- lm(EES_GGM_huge_np_w ~ pola + country + year, data = data)
+
+# summary
+summary(huge_np_w_pola)
+
+```
+
+```{r}
+# np_w base model (fixed effects)
+huge_np_w_turnout <- lm(EES_GGM_huge_np_w ~ turnout + country + year, data = data)
+
+# summary
+summary(huge_np_w_turnout)
+
+# significant
+```
+
+```{r}
+# np_w base model (fixed effects)
+huge_np_w_ihdi <- lm(EES_GGM_huge_np_w ~ ihdi + country + year, data = data)
+
+# summary
+summary(huge_np_w_ihdi)
+
+```
+
+```{r}
+# np_w base model (fixed effects)
+huge_np_w_ENEP <- lm(EES_GGM_huge_np_w ~ ENEP + country + year, data = data)
+
+# summary
+summary(huge_np_w_ENEP)
+```
+
+```{r}
+# np_w base model (fixed effects)
+huge_np_w_gallagher <- lm(EES_GGM_huge_np_w ~ gallagher + country + year, data = data)
+
+# summary
+summary(huge_np_w_gallagher)
+
+```
+
+## EGA
+
+```{r}
+# ega base model (fixed effects)
+ega_alt_inf <- lm(EES_EGA ~ alt_inf + country + year, data = data)
+
+# summary
+summary(ega_alt_inf)
+
+```
+
+```{r}
+# ega base model (fixed effects)
+ega_educ <- lm(EES_EGA ~ educ + country + year, data = data)
+
+# summary
+summary(ega_educ)
+```
+
+```{r}
+# ega base model (fixed effects)
+ega_ideol <- lm(EES_EGA ~ ideol + country + year, data = data)
+
+# summary
+summary(ega_ideol)
+
+```
+
+```{r}
+# ega base model (fixed effects)
+ega_mass_mob <- lm(EES_EGA ~ mass_mob + country + year, data = data)
+
+# summary
+summary(ega_mass_mob)
+
+```
+
+```{r}
+# ega base model (fixed effects)
+ega_p_inst <- lm(EES_EGA ~ p_inst + country + year, data = data)
+
+# summary
+summary(ega_p_inst)
+
+# significant
+```
+
+```{r}
+# ega base model (fixed effects)
+ega_p_inst_k <- lm(EES_EGA ~ p_inst_k + country + year, data = data)
+
+# summary
+summary(ega_p_inst_k)
+
+# significant
+```
+
+```{r}
+# ega base model (fixed effects)
+ega_pint <- lm(EES_EGA ~ pint + country + year, data = data)
+
+# summary
+summary(ega_pint)
+
+```
+
+```{r}
+# ega base model (fixed effects)
+ega_pola <- lm(EES_EGA ~ pola + country + year, data = data)
+
+# summary
+summary(ega_pola)
+
+```
+
+```{r}
+# ega base model (fixed effects)
+ega_turnout <- lm(EES_EGA ~ turnout + country + year, data = data)
+
+# summary
+summary(ega_turnout)
+
+# significant
+```
+
+```{r}
+# ega base model (fixed effects)
+ega_ihdi <- lm(EES_EGA ~ ihdi + country + year, data = data)
+
+# summary
+summary(ega_ihdi)
+
+```
+
+```{r}
+# ega base model (fixed effects)
+ega_ENEP <- lm(EES_EGA ~ ENEP + country + year, data = data)
+
+# summary
+summary(ega_ENEP)
+```
+
+```{r}
+# ega base model (fixed effects)
+ega_gallagher <- lm(EES_EGA ~ gallagher + country + year, data = data)
+
+# summary
+summary(ega_gallagher)
+
+```
+
+## CCA
+
+```{r}
+# ega base model (fixed effects)
+cca_alt_inf <- lm(EES_CCA ~ alt_inf + country + year, data = data)
+
+# summary
+summary(cca_alt_inf)
+
+```
+
+```{r}
+# ega base model (fixed effects)
+cca_educ <- lm(EES_CCA ~ educ + country + year, data = data)
+
+# summary
+summary(cca_educ)
+```
+
+```{r}
+# ega base model (fixed effects)
+cca_ideol <- lm(EES_CCA ~ ideol + country + year, data = data)
+
+# summary
+summary(cca_ideol)
+
+```
+
+```{r}
+# ega base model (fixed effects)
+cca_mass_mob <- lm(EES_CCA ~ mass_mob + country + year, data = data)
+
+# summary
+summary(cca_mass_mob)
+
+```
+
+```{r}
+# ega base model (fixed effects)
+cca_p_inst <- lm(EES_CCA ~ p_inst + country + year, data = data)
+
+# summary
+summary(cca_p_inst)
+
+```
+
+```{r}
+# ega base model (fixed effects)
+cca_p_inst_k <- lm(EES_CCA ~ p_inst_k + country + year, data = data)
+
+# summary
+summary(cca_p_inst_k)
+
+```
+
+```{r}
+# ega base model (fixed effects)
+cca_pint <- lm(EES_CCA ~ pint + country + year, data = data)
+
+# summary
+summary(cca_pint)
+
+```
+
+```{r}
+# ega base model (fixed effects)
+cca_pola <- lm(EES_CCA ~ pola + country + year, data = data)
+
+# summary
+summary(cca_pola)
+
+```
+
+```{r}
+# ega base model (fixed effects)
+cca_turnout <- lm(EES_CCA ~ turnout + country + year, data = data)
+
+# summary
+summary(cca_turnout)
+
+
+```
+
+```{r}
+# ega base model (fixed effects)
+cca_ihdi <- lm(EES_CCA ~ ihdi + country + year, data = data)
+
+# summary
+summary(cca_ihdi)
+
+```
+
+```{r}
+# ega base model (fixed effects)
+cca_ENEP <- lm(EES_CCA ~ ENEP + country + year, data = data)
+
+# summary
+summary(cca_ENEP)
+```
+
+```{r}
+# ega base model (fixed effects)
+cca_gallagher <- lm(EES_CCA ~ gallagher + country + year, data = data)
+
+# summary
+summary(cca_gallagher)
+
+```
+
