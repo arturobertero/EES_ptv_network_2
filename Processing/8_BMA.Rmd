@@ -132,7 +132,7 @@ summary(huge_aspl) # pint and ihdi
 
 ## BMA with BMS package
 
-## BMA for cor
+### BMA for cor
 
 ```{r}
 # constraint
@@ -164,7 +164,7 @@ model_cor_aspl <- bms(bms_cor_aspl, fixed.reg = c(
 estimates.bma(model_cor_aspl) # no pip > 50 
 ```
 
-## BMA for glasso
+### BMA for glasso
 
 ```{r}
 # constraint
@@ -196,7 +196,7 @@ model_glasso_aspl <- bms(bms_glasso_aspl, fixed.reg = c(
 estimates.bma(model_glasso_aspl) #pip > 50 pola pint p_inst
 ```
 
-## BMA for huge
+### BMA for huge
 
 ```{r}
 # constraint
@@ -227,5 +227,7 @@ model_huge_aspl <- bms(bms_huge_aspl, fixed.reg = c(
 
 estimates.bma(model_huge_aspl) #pip > 50 pola p_inst
 ```
+
+
 
 

@@ -8,7 +8,7 @@ output: html_document
 ```{r}
 library("pacman")
 p_load(tidyverse, here, haven, countrycode, vdemdata, psych, lavaan, ltm,
-       janitor, conflicted, stringr)
+       janitor, conflicted, stringr, readxl)
 
 #conflicts
 conflict_prefer("select", "dplyr")
@@ -148,10 +148,82 @@ final <- final %>%
   mutate(across(-c(country, year, country_year), as.numeric))
 ```
 
+## Turnout dfs
+
+```{r}
+# create turnout for the analyses of consequences of network characteristics
+turnout_df = final %>% 
+  select(country_year:EES_GGM_huge_np_w, educ:EES_COR_np_w) 
+
+# create comp_voting
+turnout_df = turnout_df %>% 
+  mutate(mand = case_when(
+    country %in% c("BEL", "LUX", "CYP") ~ 1,
+    TRUE ~ 0
+  ))
+```
+
+
+```{r}
+# gdp
+gdp = read_csv(here("Input", "data", "gdp.csv")) 
+gdp$`Country or Area` = countrycode(gdp$`Country or Area`, "country.name", "iso3c")
+
+#find unique ISO code
+unique_countries = DV %>% 
+  distinct(country)
+
+gdp = gdp %>% 
+    filter(`Country or Area` %in% unique_countries$country,
+         Year == "1989" |
+         Year == "1994" |
+         Year == "1999" |
+         Year == "2004" |
+         Year == "2009" |
+         Year == "2014" |
+         Year == "2019") %>% 
+  rename(year = Year,
+         country = `Country or Area`,
+         gdp = Value) %>% 
+  mutate(country_year = paste(country, year, sep = "_")) %>% 
+  select(country, year, country_year, gdp)
+```
+
+```{r}
+# inflation
+infla = read_excel(here("Input", "data", "infla.xlsx")) %>% 
+  select(`Country Code`: `2019 [YR2019]`) %>% 
+  filter(`Country Code` %in% unique_countries$country) %>% 
+  pivot_longer(cols = c(`1989 [YR1989]`, `1994 [YR1994]`, `1999 [YR1999]`, 
+             `2004 [YR2004]`, `2009 [YR2009]`, `2014 [YR2014]`, 
+             `2019 [YR2019]`),
+    names_to = "year") %>% 
+    mutate(year = sub(" .*", "", year)) %>% 
+  rename(country = `Country Code`,
+         infla = value) %>% 
+  mutate(country_year = paste(country, year, sep = "_")) %>% 
+  select(country, year, country_year, infla)
+```
+
+
+```{r}
+# merge gdp and inflation to turnout
+
+# Merge the 'gdp' column from the 'gdp' dataframe
+final_turnout <- merge(turnout_df, gdp[, c("country_year", "gdp")], by = "country_year", all.x = TRUE)
+
+# Merge the 'infla' column from the 'infla' dataframe
+final_turnout <- merge(final_turnout, infla[, c("country_year", "infla")], by = "country_year", all.x = TRUE)
+
+
+```
+
+
 # Output
 
 ```{r}
 saveRDS(final, here("Input", "final_data", "final.rds"))
+saveRDS(final_turnout, here("Input", "final_data", "final_turnout.rds"))
 ```
 
 
