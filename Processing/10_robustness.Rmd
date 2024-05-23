@@ -568,6 +568,7 @@ turnout$country = as.factor(turnout$country)
 turnout$year = as.factor(turnout$year)
 turnout$country_year = as.factor(turnout$country_year)
 turnout$infla = as.numeric(turnout$infla)
+turnout$mand = as.factor(turnout$mand)
 ```
 
 ```{r}

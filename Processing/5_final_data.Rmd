@@ -8,7 +8,7 @@ output: html_document
 ```{r}
 library("pacman")
 p_load(tidyverse, here, haven, countrycode, vdemdata, psych, lavaan, ltm,
-       janitor, conflicted, stringr, readxl)
+       janitor, conflicted, stringr, readxl, openxlsx)
 
 #conflicts
 conflict_prefer("select", "dplyr")
@@ -155,12 +155,34 @@ final <- final %>%
 turnout_df = final %>% 
   select(country_year:EES_GGM_huge_np_w, educ:EES_COR_np_w) 
 
-# create comp_voting
-turnout_df = turnout_df %>% 
-  mutate(mand = case_when(
-    country %in% c("BEL", "LUX", "CYP") ~ 1,
-    TRUE ~ 0
-  ))
+#Import IDEA data for national turnout and mandatory voting
+#turnout_idea = read_xlsx(here("Input", "data", "idea.xlsx")) %>% 
+#  select(ISO3, Election_Type, Year, Voter_Turnout, mand) %>% 
+#  filter(ISO3 %in% final$country) %>%
+#  filter(Election_Type == "Parliamentary") %>% 
+#  rename(turnout_nat = Voter_Turnout) %>% 
+#  mutate(Year = substr(Year, 1, 4), #preserve years only
+#         Year = as.numeric(Year),
+#         country_year = paste(ISO3, Year, sep = "_"))
+
+#export data
+#write.xlsx(turnout_idea, file = here("Input", "data", "idea2.xlsx"))
+
+#import corrected IDEA data (each election year is recoded with the closes
+#value of the EU elections. e.g.: elction happend in 2010, is recoded to 2009)
+turnout_idea = read_xlsx(here("Input", "data", "idea2.xlsx")) %>% 
+  mutate(country_year = paste(ISO3, Year, sep = "_"),
+         turnout_nat = as.numeric(gsub("%", "", turnout_nat)),
+         mand = ifelse(mand == "No", 0, ifelse(mand == "Yes", 1, mand))) %>% 
+  select(ISO3, Year, country_year, turnout_nat, mand) %>% 
+  rename(country = ISO3, year = Year)
+
+#merge with turnout_df
+turnout_df <- merge(turnout_df, 
+                    turnout_idea[, c("country_year", "turnout_nat", "mand")], 
+                    by = "country_year", 
+                    all.x = TRUE)
+
 ```
 
 
@@ -207,7 +229,7 @@ infla = read_excel(here("Input", "data", "infla.xlsx")) %>%
 
 
 ```{r}
-# merge gdp and inflation to turnout
+# merge gdp and inflation to turnout 
 
 # Merge the 'gdp' column from the 'gdp' dataframe
 final_turnout <- merge(turnout_df, gdp[, c("country_year", "gdp")], by = "country_year", all.x = TRUE)
