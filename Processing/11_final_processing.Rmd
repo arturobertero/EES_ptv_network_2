@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = FALSE, error = FALSE, message = FALSE, warning = FA
 library("pacman")
 p_load(tidyverse, here, haven, countrycode, vdemdata, psych, lavaan, ltm,
        janitor, conflicted, sjPlot, BMA, BMS, fastDummies, ggplot2, reshape2,
-       hrbrthemes, viridis, ggrepel)
+       hrbrthemes, viridis, ggrepel, jtools, patchwork)
 
 #conflicts
 conflict_prefer("select", "dplyr")
@@ -316,14 +316,14 @@ tab_model(list(huge_aspl_c, huge_aspl_2_c, huge_aspl_3_c),
 ```
 
 ## Summary and graph
-We have two solid predictors: p_inst and pola. Pint is not significant and, additionally, points in the "wrong" direction. Now the scatterplot between huge_aspl and p_inst. Unfortunately, it looks miserable. Correlation between the two measures is -0.01206442. 
+We have two solid predictors: p_inst and pola. Pint is not significant and, additionally, points in the "wrong" direction. Now the scatterplot between huge_aspl and p_inst. Unfortunately, it looks miserable. Correlation between the two measures is -0.01206442.The scatterplot is updated (corrected labels).
 
 ```{r}
 # Mutate the country_year column
 data_scatt <- data %>%
   mutate(
     iso2c = countrycode(substr(country_year, 1, 3), "iso3c", "iso2c"),
-    year = substr(country_year, 6, 7),
+    year = substr(country_year, 7, 8),
     country_year_modified = paste(iso2c, year, sep = "_")
   )
 
@@ -332,13 +332,126 @@ scatt1 = ggplot(data_scatt, aes(x = p_inst, y = EES_GGM_huge_aspl)) +
   geom_point(size = 1) +  
   geom_smooth(method = lm, color = "pink", fill = "#69b3a2", se = TRUE) +
   theme_ipsum() +
-  labs(title = "Scatterplot of huge_aspl and p_inst",
-       x = "p_inst",
-       y = "EES_GGM_huge_aspl") +
+  labs(x = "Party institutionalization",
+       y = "ASPL") +
   geom_text_repel(aes(label = country_year_modified), size = 2)
 
 print(scatt1)
 ```
+
+Alternative plot 1: scatterplots with facet wrap by country. Here we see the problems might be related to the very low variance of party_institutionalization.
+
+```{r}
+# Data preparation
+data_scatt_1 <- data %>%
+  mutate(
+    iso2c = as.factor(countrycode(substr(country_year, 1, 3), "iso3c", "iso2c")),
+    year = as.factor(substr(country_year, 7, 8)),
+    country_year_modified = as.factor(paste(iso2c, year, sep = "_")),
+    country = as.factor(country)
+  )
+
+# Create the scatterplot with facet wrap by country
+scatt_faceted_1 = ggplot(data_scatt_1, aes(x = p_inst, y = EES_GGM_huge_aspl)) +
+  geom_point(size = 0.5) +  
+  labs(x = "Party institutionalization",
+       y = "ASPL") +
+  facet_wrap(~ country)
+
+# Print the faceted scatterplot
+print(scatt_faceted_1)
+```
+
+Alternative plot 2: scatterplots with facet wrap by year. Here we see the problems might be related to the very low variance of party_institutionalization. It is still very hard to grasp a negative relationship between the two. 
+
+```{r}
+#data prep
+data_scatt_2 <- data %>%
+  mutate(
+    iso2c = as.factor(countrycode(substr(country_year, 1, 3), "iso3c", "iso2c")),
+    country_year_modified = as.factor(paste(iso2c, year, sep = "_")),
+    country = as.factor(country)
+  )
+
+# Create the scatterplot with facet wrap by country
+scatt_faceted_2 = ggplot(data_scatt_2, aes(x = p_inst, y = EES_GGM_huge_aspl)) +
+  geom_point(size = 0.5) + 
+  geom_smooth(method = "lm", color = "pink", fill = "#69b3a2", se = TRUE) +
+  labs(x = "Party institutionalization",
+       y = "ASPL") +
+  facet_wrap(~ year) 
+
+# Print the faceted scatterplot
+print(scatt_faceted_2)
+```
+
+Alternative plot 3: same with labels.
+```{r}
+# Create the scatterplot with facet wrap by country
+scatt_faceted_3 = ggplot(data_scatt_2, aes(x = p_inst, y = EES_GGM_huge_aspl)) +
+  geom_point(size = 0.5) + 
+  geom_smooth(method = "lm", color = "pink", fill = "#69b3a2", se = TRUE) +
+  labs(x = "Party institutionalization",
+       y = "ASPL") +
+  facet_wrap(~ year) + 
+  geom_text_repel(aes(label = country_year_modified), size = 2)
+
+# Print the faceted scatterplot
+print(scatt_faceted_3)
+```
+
+Alternative plot 4: effect_plot. Here we have a slope for p_inst and pola. We are plotting the predicted regression line of the full model (country + ye F.E.). 
+
+```{r}
+# Generate the effect plots
+eff_1 = effect_plot(huge_aspl_3_c, pred = p_inst, interval = TRUE, plot.points = TRUE) +
+  labs(x = "Party institutionalization", y = "ASPL") +
+  theme(plot.margin = margin(0, 0, 0, 0, "pt")) +
+  theme_ipsum()
+
+eff_2 = effect_plot(huge_aspl_3_c, pred = pola, interval = TRUE, plot.points = TRUE) +
+  labs(x = "Party polarization", y = "ASPL") +
+  theme(plot.margin = margin(0, 0, 0, 0, "pt")) +
+  theme_ipsum()
+
+eff_3 = effect_plot(huge_aspl_3_c, pred = pint, interval = TRUE, plot.points = TRUE) +
+  labs(x = "Political interest", y = "ASPL") +
+  theme(plot.margin = margin(0, 0, 0, 0, "pt")) +
+  theme_ipsum()
+
+# Combine the plots using patchwork
+combined_plot <- eff_1 + eff_2 + eff_3
+plot_layout(ncol = 1, heights = c(0.5, 0.5, 0.5), guides = "collect") & 
+theme(plot.margin = margin(0,0,0,0, "cm"))
+
+# Print the combined plot
+print(combined_plot)
+```
+```{r}
+# Select coeff
+coef_select <- c("p_inst", "pola", "pint", "ENEP", "gallagher", "ihdi")
+
+# Define new labels 
+coef_labels <- c(
+  "p_inst" = "Party institutionalization",
+  "pola" = "Party polarization",
+  "pint" = "Political interest",
+  "ENEP" = "ENEP",
+  "gallagher" = "Gallagher",
+  "ihdi" = "IHDI"
+)
+
+# Generate the summary plot with the specified coefficients, colors, and new labels
+plot_coef <- plot_summs(huge_aspl_3, huge_aspl_3_c, coefs = coef_select, colors = c("pink", "#69b3a2"), 
+                        model.names = c("Model 1", "Model 2")) +
+  scale_y_discrete(labels = coef_labels) +
+  theme_minimal() +
+  labs(y = NULL)
+
+# Print the plot
+print(plot_coef)
+```
+
 
 # Part 2: What are the consequences of network characteristics? 
 
@@ -516,7 +629,7 @@ print(violin_plot_aspl)
   - M3: National turnout = EES_GGM_huge_np_i + country + year
   - M4: National turnout = EES_GGM_huge_np_w + country + year
 
-The weighted measures perform very well in predicting both types of turnout.  
+The weighted measures perform very well in predicting both types of turnout. 
   
 ```{r}
 # reg turnout
@@ -545,14 +658,14 @@ tab_model(list(tur_eu_i, tur_eu_w, tur_na_i, tur_na_w),
   - M3: National turnout = EES_GGM_huge_np_i + country + year + mand + gdp + infla + ihdi + pola + ENEP
   - M4: National turnout = EES_GGM_huge_np_w + country + year + mand + gdp + infla + ihdi + pola + ENEP
   
-Once again we have solid findings for the weighted measures, even if considering turnout  
+Once again we have solid findings for the weighted measures, even if considering turnout. I also add ASPL as covariate, but it is never significant.   
 
 ```{r}
 # reg turnout
-tur_eu_i_c = lm(turnout ~ EES_GGM_huge_np_i + country + year + mand + gdp + infla + ihdi + pola + ENEP, data = turnout)
-tur_eu_w_c = lm(turnout ~ EES_GGM_huge_np_w + country + year + mand + gdp + infla + ihdi + pola + ENEP, data = turnout)
-tur_na_i_c = lm(turnout_nat ~ EES_GGM_huge_np_i + country + year + mand + gdp + infla + ihdi + pola + ENEP, data = turnout)
-tur_na_w_c = lm(turnout_nat ~ EES_GGM_huge_np_w + country + year + mand + gdp + infla + ihdi + pola + ENEP, data = turnout)
+tur_eu_i_c = lm(turnout ~ EES_GGM_huge_np_i + country + year + mand + gdp + infla + ihdi + pola + ENEP + EES_GGM_huge_aspl, data = turnout)
+tur_eu_w_c = lm(turnout ~ EES_GGM_huge_np_w + country + year + mand + gdp + infla + ihdi + pola + ENEP + EES_GGM_huge_aspl, data = turnout)
+tur_na_i_c = lm(turnout_nat ~ EES_GGM_huge_np_i + country + year + mand + gdp + infla + ihdi + pola + ENEP + EES_GGM_huge_aspl, data = turnout)
+tur_na_w_c = lm(turnout_nat ~ EES_GGM_huge_np_w + country + year + mand + gdp + infla + ihdi + pola + ENEP + EES_GGM_huge_aspl, data = turnout)
 
 tab_model(list(tur_eu_i_c, tur_eu_w_c, tur_na_i_c, tur_na_w_c),
           show.p = TRUE,
@@ -564,7 +677,8 @@ tab_model(list(tur_eu_i_c, tur_eu_w_c, tur_na_i_c, tur_na_w_c),
           title = "OLS fixed effects (country and years) ratio measures and turnout(s)",
           string.pred = " ",
           auto.label = FALSE,
-          terms = c("EES_GGM_huge_np_i", "EES_GGM_huge_np_w", "mand", "gdp", "infla", "ihdi", "pola"))
+          terms = c("EES_GGM_huge_np_i", "EES_GGM_huge_np_w", "mand", "gdp", "infla", "ihdi", "pola", "EES_GGM_huge_aspl"))
+
 ```
 
 ## Summary
@@ -575,7 +689,7 @@ Results holds for the other measure of turnout (national elections). The weighte
 data_scatt_2 <- turnout %>%
   mutate(
     iso2c = countrycode(substr(country_year, 1, 3), "iso3c", "iso2c"),
-    year = substr(country_year, 6, 7),
+    year = substr(country_year, 7,8),
     country_year_modified = paste(iso2c, year, sep = "_")
   )
 
@@ -583,9 +697,9 @@ data_scatt_2 <- turnout %>%
 scatt2 = ggplot(data_scatt_2, aes(x = EES_GGM_huge_np_w, y = turnout)) +
   geom_point(size = 1) +  
   geom_smooth(method = lm, color = "pink", fill = "#69b3a2", se = TRUE) +
+  theme(plot.margin = margin(0, 0, 0, 0, "pt")) +
   theme_ipsum() +
-  labs(title = "Scatterplot of huge_aspl weighted ratio and EU turnout",
-       x = "huge_np_w",
+  labs(x = "Ratio negative positive edges",
        y = "EU turnout") +
   geom_text_repel(aes(label = country_year_modified), size = 2)
 
@@ -607,12 +721,41 @@ data_scatt_3 <- turnout %>%
 scatt3 = ggplot(data_scatt_3, aes(x = EES_GGM_huge_np_w, y = turnout_nat)) +
   geom_point(size = 1) +  
   geom_smooth(method = lm, color = "pink", fill = "#69b3a2", se = TRUE) +
+  theme(plot.margin = margin(0, 0, 0, 0, "pt")) +
   theme_ipsum() +
-  labs(title = "Scatterplot of huge_aspl weighted ratio and national turnout",
-       x = "huge_np_w",
+  labs(x = "Ratio negative positive edges",
        y = "National turnout") +
   geom_text_repel(aes(label = country_year_modified), size = 2)
 
 print(scatt3)
+```
+
+The combined plot
+
+```{r}
+# Combine the plots using patchwork
+combined_plot_2 <- scatt2 + scatt3
+plot_layout(ncol = 1, heights = c(0.5, 0.5, 0.5), guides = "collect") & 
+theme(plot.margin = margin(0,0,0,0, "cm"))
+
+# Print the combined plot
+print(combined_plot_2)
+```
+
+A closer inspection of the variable mandatory voting. It was previously coding 1 countries with STRICT legislation for mandatory voting. It is now scoring 1 also for countries with WEAK legislationfor mandatory voting (this is the coding of the IDEA database). 
+
+```{r}
+# Plot with colored dots
+scatt_mand <- ggplot(data_scatt_2, aes(x = EES_GGM_huge_np_w, y = turnout, color = as.factor(mand))) +
+  geom_point(size = 1) +
+  geom_smooth(method = lm, color = "pink", fill = "#69b3a2", se = TRUE) +
+  theme(plot.margin = margin(0, 0, 0, 0, "pt")) +
+  theme_ipsum() +
+  labs(x = "Ratio negative positive edges",
+       y = "EU turnout",
+       color = "Mandatory voting") +  
+  geom_text_repel(aes(label = country_year_modified), size = 2)
+
+print(scatt_mand)
 ```
 
