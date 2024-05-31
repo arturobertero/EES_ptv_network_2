@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = FALSE, error = FALSE, message = FALSE, warning = FA
 ```{r}
 library("pacman")
 p_load(tidyverse, here, haven, countrycode, vdemdata, psych, lavaan, ltm, magick,
-       janitor, conflicted, sjPlot, BMA, BMS, fastDummies, ggplot2, reshape2,
+       janitor, conflicted, sjPlot, BMA, BMS, fastDummies, ggplot2, reshape2, ggeffects,
        hrbrthemes, viridis, ggrepel, jtools, patchwork, kableExtra, bootnet, qgraph)
 
 #conflicts
@@ -476,6 +476,7 @@ tab_model(
   pred.labels = c("Party institutionalization", "Party polarization", "Political interest"),
   file = here("Output", "Article", "Table_1.html")
 )
+
 ```
 
 
@@ -564,29 +565,29 @@ ggsave(here("Output", "Article", "Figure_1_a.jpg"), scatt1, width = 16, height =
 Figure_1_b
 
 ```{r}
-# Data preparation
-data_scatt_1 <- data %>%
-  mutate(
-    iso2c = as.factor(countrycode(substr(country_year, 1, 3), "iso3c", "iso2c")),
-    year = as.factor(substr(country_year, 7, 8)),
-    country_year_modified = as.factor(paste(iso2c, year, sep = "_")),
-    country = as.factor(country)
-  )
-
-# Create the scatterplot with facet wrap by country
-scatt_faceted_1 = ggplot(data_scatt_1, aes(x = p_inst, y = EES_GGM_huge_aspl)) +
-  geom_point(size = 1) +  
-  labs(x = "Party institutionalization",
-       y = "ASPL") +
-  theme_ipsum(base_size = 14) +
-  facet_wrap(~ country) +
-  geom_text_repel(aes(label = year), size = 2.5)
-
-# Print the faceted scatterplot
-print(scatt_faceted_1)
-
-#save
-ggsave(here("Output", "Article", "Figure_1_b.jpg"), scatt_faceted_1, width = 16, height = 9, dpi = 600)
+## Data preparation
+#data_scatt_1 <- data %>%
+#  mutate(
+#    iso2c = as.factor(countrycode(substr(country_year, 1, 3), "iso3c", #"iso2c")),
+#    year = as.factor(substr(country_year, 7, 8)),
+#    country_year_modified = as.factor(paste(iso2c, year, sep = "_")),
+#    country = as.factor(country)
+#  )
+#
+## Create the scatterplot with facet wrap by country
+#scatt_faceted_1 = ggplot(data_scatt_1, aes(x = p_inst, y = EES_GGM_huge_aspl)) #+
+#  geom_point(size = 1) +  
+#  labs(x = "Party institutionalization",
+#       y = "ASPL") +
+#  theme_ipsum(base_size = 14) +
+#  facet_wrap(~ country) +
+#  geom_text_repel(aes(label = year), size = 2.5)
+#
+## Print the faceted scatterplot
+#print(scatt_faceted_1)
+#
+##save
+#ggsave(here("Output", "Article", "Figure_1_b.jpg"), scatt_faceted_1, width = #16, height = 9, dpi = 600)
 ```
 
 Figure_1_c
