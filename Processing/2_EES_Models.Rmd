@@ -8,7 +8,7 @@ output: html_document
 ```{r}
 library("pacman")
 p_load(tidyverse, here, haven, countrycode, qgraph, bootnet, EGAnet, psych,
-       huge, corclass)
+       huge, corclass, purrr)
 ```
 
 
@@ -16,6 +16,26 @@ p_load(tidyverse, here, haven, countrycode, qgraph, bootnet, EGAnet, psych,
 
 ```{r}
 EES = read_rds(here("Input", "data", "EES.rds"))
+```
+
+```{r}
+#calculate true N per wave
+
+# the function
+calculate_total_rows <- function(year_list) {
+  total_rows <- map_dbl(year_list, nrow)
+  sum(total_rows)
+}
+
+# Apply the function 
+total_rows_per_year <- map_dbl(EES, calculate_total_rows)
+
+# Convert the result to a data frame 
+total_rows_df <- data.frame(
+  Year = names(total_rows_per_year),
+  TotalRows = total_rows_per_year
+)
+
 ```
 
 

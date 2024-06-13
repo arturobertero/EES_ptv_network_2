@@ -8,7 +8,7 @@ output: html_document
 ```{r}
 library("pacman")
 p_load(tidyverse, here, haven, countrycode, vdemdata, psych, lavaan, ltm,
-       janitor, conflicted)
+       janitor, conflicted, openxlsx)
 
 #conflicts
 conflict_prefer("select", "dplyr")
@@ -603,6 +603,57 @@ mass_mob_long = mass_mob %>%
   select(country, year, country_year, mass_mob)
 ```
 
+## Affective pola
+
+```{r}
+#clean the original dataframe 
+
+##import
+#aff_pola = read_dta(here("Input", "data","Garzia, Ferreira da Silva, Maye_AP.dta"))
+#
+## Mutate
+#country_rule <- c("1" = "Australia",
+#                    "3" = "Canada",
+#                    "5" = "Denmark",
+#                    "7" = "Finland",
+#                    "8" = "France",
+#                    "9" = "Germany",
+#                    "10" = "Greece",
+#                    "14" = "Italy",
+#                    "17" = "Netherlands",
+#                    "18" = "New Zealand",
+#                    "19" = "Norway",
+#                    "20" = "Portugal",
+#                    "24" = "Spain",
+#                    "25" = "Sweden",
+#                    "26" = "Switzerland",
+#                    "27" = "United Kingdom",
+#                    "28" = "United States")
+#
+## Convert COUNTRY to character before recoding
+#aff_pola <- aff_pola %>%
+#  mutate(COUNTRY = as.character(COUNTRY)) %>%
+#  mutate(COUNTRY = recode(COUNTRY, !!!country_rule)) %>%
+#  mutate(COUNTRY = countrycode(COUNTRY, "country.name", "iso3c")) %>%
+#  rename(Country = COUNTRY, Year = YEAR) %>%  
+#  filter(Country %in% unique_countries$country)
+#
+## Save as excel
+#write.xlsx(aff_pola, file = here("Input", "data","aff_pola.xlsx"))
+
+# Import cleaned data
+aff_pola = read.xlsx(here("Input", "Data", "aff_pola_final.xlsx"))
+
+#long
+aff_pola_long = aff_pola %>% 
+    rename(country = Country,
+         year = Year) %>% 
+  mutate(year = as.integer(year),
+    country_year = paste(country, year, sep = "_")) %>% 
+  select(country, year, country_year, 
+         PAP_partisans, PAP_electorate, LAP_partisans, LAP_electorate)
+
+```
 
 # Output
 
@@ -621,5 +672,6 @@ saveRDS(turnout_long, here("Input", "final_data", "IV", "turnout_long.rds"))
 saveRDS(IHDI_long, here("Input", "final_data", "IV", "IHDI_long.rds"))
 saveRDS(ENEP_long, here("Input", "final_data", "IV", "ENEP_long.rds"))
 saveRDS(gallagher_long, here("Input", "final_data", "IV", "gallagher_long.rds"))
+saveRDS(aff_pola_long, here("Input", "final_data", "IV", "aff_pola_long.rds"))
 ```
 
