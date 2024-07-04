@@ -1,20 +1,25 @@
 ---
-title: "Robustness checks"
-author: "Arturo Bertero"
-date: "2024-04-15"
+title: 'Supplemental material for the article: Consequences and determinants of PTV
+  networks in Europe between 1989 and 2019'
+author: "Arturo Bertero, Mark Brandt"
 output:
-  html_document:
-    toc: true
-    toc_float: true
+  pdf_document: default
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, error = FALSE, message = FALSE, warning = FALSE)
+<style>
+body {
+text-align: justify}
+</style>
+
+```{r Setup, message=FALSE, warning=FALSE, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, error = FALSE, message = FALSE, warning = FALSE, results = 'asis')
 ```
+
+This document present all additional analysis relative to the paper. We present descriptive statistics on sample sizes, additional figures on the aggregated distribution of network characteristics and full models of the coincise versions shown in the article. We also provide additional models regarding: the results of alternative network estimation (GGM, correlational networks); alternative network measures (mean constraint; integer ratio of negative to positive edges); different dependent variables (national turnout). 
 
 ```{r}
 library("pacman")
-p_load(tidyverse, here, haven, countrycode, vdemdata, psych, lavaan, ltm, magick,
+p_load(tidyverse, here, haven, countrycode, vdemdata, psych, lavaan, ltm, magick, html2latex,
        janitor, conflicted, sjPlot, BMA, BMS, fastDummies, ggplot2, reshape2, ggeffects,
        hrbrthemes, viridis, ggrepel, jtools, patchwork, kableExtra, bootnet, qgraph, webshot)
 
@@ -34,23 +39,17 @@ data$country_year = as.factor(data$country_year)
 ```
 
 
-# Introduction
-Document showing graphs for Supplment and Article. I begin with original variables.
-
-# Descriptives
-
-## Table_1 (Article)
+# Table 1 
 ```{r}
 #data from "2_EES_Models.Rmd"
-Original_n = c(11678,13063,13549,28861,27069,30064,26538,150822)
-Losses = c(16.47,19.27,16.00,32.66,14.34,24.00,6.53,19.14)
 Year = c(1989,1994,1999,2004,2009,2014,2019,"Total")
 n = c(9755,10546,11381,19435,23186,22850,24806,121959)
 
 #Table_1 
-Table_1 = data_frame(Year, Original_n, n, Losses)
+Table_1 = data_frame(Year, n)
 
-sjPlot::tab_df(Table_1, file = here("Output", "Article", "Table_1.doc"))
+# Print the table in a nice format
+kable(Table_1, caption = "Table 1: Sample sizes by year", col.names = c("Year", "Observations"), format = "latex", booktabs = TRUE)
 ```
 
 
@@ -118,20 +117,13 @@ violin_plot_aspl <- ggplot(plot_data_aspl, aes(x=myaxis, y=Value, fill=Model)) +
 
 ```
 
-## Fig_1 (Supplement)
-Aggregated frequency distribution with outliers and original scales. 
+# Figure 1 
+Aggregated frequency distribution of constraint and weighted ASPL, with outliers and original scales. 
 
-```{r}
-#print desc_1
-Fig_1 = violin_plot + violin_plot_aspl 
-print(Fig_1)
+![Figure 1](../Output/Supplement/Fig_1.jpg) 
 
-#save
-ggsave(here("Output", "Supplement", "Fig_1.jpg"), Fig_1, width = 16, height = 9, dpi = 600)
-```
-
-## Fig_1_bis (Supplement)
-Remove outliers and re-do figure 1
+# Figure 2 
+Aggregated frequency distribution of constraint and weighted ASPL, without outliers. 
 
 ```{r}
 #robustness: remove outliers from aspl
@@ -232,16 +224,10 @@ violin_plot_aspl <- ggplot(plot_data_aspl, aes(x=myaxis, y=Value, fill=Model)) +
 
 ```
 
-```{r}
-#print desc_1
-Fig_1 = violin_plot + violin_plot_aspl 
-print(Fig_1)
+![Figure 2](../Output/Supplement/Fig_1_bis.jpg) 
 
-#save
-ggsave(here("Output", "Supplement", "Fig_1_bis.jpg"), Fig_1, width = 16, height = 9, dpi = 600)
-```
-
-## Fig_2 constraint over time (Supplement)
+# Figure 3
+Temporal development of constraint, by country, without outliers (5 cases were outliers with respect to the ASPL aggregated frequency distribution. Hence, n lowered from 143 to 138 for both connectivity measures).
 
 ```{r fig.width=16, fig.height=8}
 # data
@@ -270,14 +256,12 @@ Fig_2 = long_cons_trend %>%
     color = "Model Type"
   )
 
-# Print the graph
-print(Fig_2)
-
-#save
-ggsave(here("Output", "Supplement", "Fig_2.jpg"), Fig_2, width = 16, height = 9, dpi = 600)
 ```
 
-## Fig_3 ASPL over time (Supplment)
+![Figure 3](../Output/Supplement/Fig_2.jpg) 
+
+# Figure 4
+Temporal development of weighted ASPL, by country, without outliers.
 
 ```{r fig.width=16, fig.height=8}
 # data
@@ -304,14 +288,12 @@ Fig_3 = long_aspl_trend %>%
          y = "ASPL",
          color = "Model Type") 
 
-# Print the graph
-print(Fig_3)
-
-#save
-ggsave(here("Output", "Supplement", "Fig_3.jpg"), Fig_3, width = 16, height = 9, dpi = 600)
 ```
-## Fig_4 scatterplot ASPL constraint (Supplement)
-Scatterplot constraint and ASPL to show networks scoring differently on the two measures
+
+![Figure 4](../Output/Supplement/Fig_3.jpg) 
+
+# Figure 5 
+Scatterplot between weighted ASPL and constraint. This figure shows the two measures strongly correlate. This motivates our choice to focus on ASPL only in the main article. Results for constraint are shown here in following regression tables. Figure 6 shows country-year cases in which the two connectivity measures show moderatly high discrepancies. 
 
 ```{r}
 #data_scatt
@@ -355,90 +337,14 @@ Fig_4 = ggplot(data_scatt, aes(x = EES_GGM_huge_constraint, y = EES_GGM_huge_asp
     axis.title.y = element_text(size = 14)  
   )
 
-print(Fig_4)
-
-#save
-ggsave(here("Output", "Supplement", "Fig_4.jpg"), Fig_4, width = 16, height = 9, dpi = 600)
-
-#descriptive about the cor
-cor(data_scatt$EES_GGM_huge_constraint, data_scatt$EES_GGM_huge_aspl)
-```
-## Fig_5 (Supplement)
-Visualize extreme cases
-
-```{r}
-# import network data to show examples
-EES_data = read_rds(here("Input", "data", "EES.rds"))
-
-#Network models
-prt_94_fit = estimateNetwork(EES_data[["1994"]][["PRT"]], default = "huge", tuning = 0.15)
-lux_99_fit = estimateNetwork(EES_data[["1999"]][["LUX"]], default = "huge", tuning = 0.15)
-mlt_14_fit = estimateNetwork(EES_data[["2014"]][["MLT"]], default = "huge", tuning = 0.15)
-rou_19_fit = estimateNetwork(EES_data[["2019"]][["ROU"]], default = "huge", tuning = 0.15)
-
-#Network matrices for highlighted cases
-prt_94 = prt_94_fit$graph
-lux_99 = lux_99_fit$graph
-mlt_14 = mlt_14_fit$graph
-rou_19 = rou_19_fit$graph
-
-#prt_94
-shortnames_prt_94 = c("CDU", "PS", "PSD", "CDS-PP", "PSN")
-longnames_prt_94 = c("Democratic Unity Coalition", "Socialist Party", "Social Democratic Party", "People's Party", "National Solidarity Party")
-
-prt_94_graph<-qgraph(prt_94, 
-  layout = "spring", theme = "Borkulo", GLratio = 2,
-  labels = shortnames_prt_94, nodeNames = longnames_prt_94,
-  label.scale=FALSE, label.cex = 1, borders = F,
-  legend.cex = 0.45, legend = TRUE, details = FALSE, vsize=7.0,
- title = "Portugal 1994", color = "#69b3a2",
- filetype="jpg", filename=here("Output", "Supplement", "Fig_5", "1"))
-
-#lux_99
-shortnames_lux_99 = c("DG", "GAL", "DL", "LSAP", "DP", "CSV", "ADR")
-longnames_lux_99 = c("The Greens","Green and Liberal Alliance", "The Left", "Luxembourg Socialist Workers' Party", "Democratic Party",
-  "Christian Social People's Party", "Alternative Democratic Reform Party")
-
-lux_99_graph<-qgraph(lux_99, GLratio = 2, 
-  layout = "spring", theme = "Borkulo", 
-  labels = shortnames_lux_99, nodeNames = longnames_lux_99,
-  label.scale=FALSE, label.cex = 1, borders = F,
-  legend.cex = 0.45, legend = TRUE, details = FALSE, vsize=7.0,
- title = "Luxembourg 1999", color = "#69b3a2",
- filetype="jpg", filename=here("Output", "Supplement", "Fig_5", "2"))
-
-#mlt_14
-shortnames_mlt_14 = c("LP", "NP", "DA")
-longnames_mlt_14 = c("Labour Party", "Nationalist Party", "Democratic Alternative")
-
-mlt_14_graph<-qgraph(mlt_14, 
-  layout = "spring", theme = "Borkulo", GLratio = 2,
-  labels = shortnames_mlt_14, nodeNames = longnames_mlt_14,
-  label.scale=FALSE, label.cex = 1, borders = F,
-  legend.cex = 0.45, legend = TRUE, details = FALSE, vsize=7.0,
- title = "Malta 2014", color = "#69b3a2",
- filetype="jpg", filename=here("Output", "Supplement", "Fig_5", "3"))
-
-#rou_19
-shortnames_rou_19 = c("PSD", "USR", "ALDE", "PPR", "PNL", "UDMR", "PMP", "PLUS+", "A" )
-longnames_rou_19 = c("Social Democratic Party", "Save Romania Union", "Alliance of Liberals and Democrats", "PRO Romania", "National Liberal Party", "Hungarian Democratic Alliance of Romania", "People's Movement Party", "Freedom, Unity and Solidarity Party", "Alliance 2020")
-
-rou_19_graph<-qgraph(rou_19, 
-  layout = "spring", theme = "Borkulo", GLratio = 2, 
-  labels = shortnames_rou_19, nodeNames = longnames_rou_19,
-  label.scale=FALSE, label.cex = 1, borders = F,
-  legend.cex = 0.45, legend = TRUE, details = FALSE, vsize=7.0,
- title = "Romania 2019", color = "#69b3a2",
- filetype="jpg", filename=here("Output", "Supplement", "Fig_5", "4"))
-
 ```
 
+![Figure 5](../Output/Supplement/Fig_4.jpg) 
 
-# Part 1: What does predict network characteristics? 
+# Figure 6
+This figure shows the networks of the highlighted cases of Figure 5. These are the few cases where ASPL and constraint diverge in measuring connectedness of PTV networks. The networks represent GGM-Huge networks where blue (red) edges are indicative of positive (negative) regularized partial correlations. This figure shows ASPL can better capture the topology of a network. When calculating mean constraint, edges are considered equals irrespectively or their network location. On the contrary, ASPL takes into account the positioning of these associations. Therefore, this measure "punihses" more the networks that are more segregated or clusterized (e.g.: Luxenburg and Romania). 
 
-## ASPL/constraint
-
-### Data managment for regressions 
+![Figure 6](../Output/Supplement/Fig_5/Fig_5.jpeg) 
 
 ```{r}
 # np_w as absoulte value
@@ -474,17 +380,13 @@ data$gallagher = rescale01(data$gallagher)
 data$ihdi = rescale01(data$ihdi)
 ```
 
-### Model 1-7 (Article and Supplement)
--M1: huge_aspl = p_inst + pola + pint + country + year
--M2: huge_aspl = p_inst + pola + pint + country + year + ENEP + gallagher + ihdi
-
-Article:
+# Models 1 and 2
+Model 1 and 2 are the one shown in the article. Here they are presented in their full form. These models have the ASPL of GGM-Huge networks ["EES_GGM_huge_aspl"] as the dependent variable. M1 has party institutionalization ["p_inst"], party polarization ["pola"], and political interest ["pint"] as main covariates; fixed effects for country and year are present as controls. M2 adds IHDI, ENEP and Gallagher's index to the list of controls. 
 
 ```{r}
 M1 <- lm(EES_GGM_huge_aspl ~ p_inst + pola + pint + country + year , data = data)
 M2 <- lm(EES_GGM_huge_aspl ~ p_inst + pola + pint + country + year + ENEP + gallagher + ihdi, data = data)
 
-#save as doc
 tab_model(
   list(M1, M2),
   show.p = TRUE,
@@ -498,32 +400,13 @@ tab_model(
   auto.label = FALSE,
   terms = c("p_inst", "pola", "pint"),
   pred.labels = c("Party institutionalization", "Political polarization", "Political interest"),
-  file = here("Output", "Article", "Table_1.doc")
-)
-```
-
-Supplement: full models
-
-```{r}
-M1 <- lm(EES_GGM_huge_aspl ~ p_inst + pola + pint + country + year , data = data)
-M2 <- lm(EES_GGM_huge_aspl ~ p_inst + pola + pint + country + year + ENEP + gallagher + ihdi, data = data)
-
-tab_model(
-  list(M1, M2),
-  show.p = TRUE,
-  p.style = "stars",
-  p.threshold = c(0.1, 0.05, 0.01),
-  dv.labels = c("M1 (F.E.)", "M2 (Controls)"),
-  collapse.ci = TRUE,
-  show.aic = TRUE,
-  title = "OLS models on ASPL of PTV networks",
-  string.pred = " ",
-  auto.label = T,
   file = here("Output", "Supplement", "reg_1.doc"))
 
 ```
 
-Supplement: full models, considering other networks (huge, glasso, cor)
+
+# Models 3 and 4
+M3 and M4 show the same model as in M2, but with the ASPL of GGM-Glasso and of Correlational network as the dependent variables. Notably, party institutionalization is not significant for correlational networks. At the contary, political interest is significant in M4. However, the other regularized partial correlation network model (GGM-Glasso, M3) confirms the role of political institutionalization and polarization.
 
 ```{r}
 M3 <- lm(EES_GGM_glasso_aspl ~ p_inst + pola + pint + country + year + ENEP + gallagher + ihdi, data = data)
@@ -544,8 +427,8 @@ tab_model(
   file = here("Output", "Supplement", "reg_2.doc"))
 ```
 
-
-Supplement: full models on constraint (huge, glasso, cor)
+# Models 5-7
+M5 and M6 present the same set of covariates of M2-M4, but with constraint as dependent variable. Constraint is calculated on every type of network model to ensure robustness of our results. Similarly to M3 and M4, the connectivity of plain correlational PTV networks is best predicted by levels of party polarization and political interest. The connectivity of GGM-Huge and GGM-glasso are associated with party institutionalization. As a general note, we remark that models regressing on constraint always show lower significance in terms of p-values. We interpret this recurring to the lower SD of constraint, if compared to the one of weighted ASPL (see Figure 2). Indeed, ASPL is a connectivity measure imported from network science. ASPL can better capture network topology when investigating the connectedness of a PTV network (see our explanation of Figure 5 above). This motivate our choice to focus on ASPL in the main article. 
 
 ```{r}
 M5 <- lm(EES_GGM_huge_constraint ~ p_inst + pola + pint + country + year + ENEP + gallagher + ihdi, data = data)
@@ -568,9 +451,6 @@ tab_model(
   file = here("Output", "Supplement", "reg_3.doc"))
 ```
 
-## Negative/positive raito
-
-### Data mang for regression
 
 ```{r}
 #import cses data (cleaned)
@@ -600,41 +480,8 @@ cses_cases$LAP_partisans <- rescale01(cses_cases$LAP_partisans)
 cses_cases$LAP_electorate <- rescale01(cses_cases$LAP_electorate)
 ```
 
-### Model 8-15
-
-Article: M8 to M11, models for huge_np_w and _i
-
-```{r}
-M8 <- lm(EES_GGM_huge_np_w ~ p_inst + pola + pint + country + year, data = data)
-
-M9 <- lm(EES_GGM_huge_np_w ~ p_inst + pola + pint + country + year +
-           ENEP + gallagher + ihdi, data = data)
-
-M10 <- lm(EES_GGM_huge_np_i ~ p_inst + pola + pint + country + year, data = data)
-
-M11 <- lm(EES_GGM_huge_np_i ~ p_inst + pola + pint + country + year +
-           ENEP + gallagher + ihdi, data = data)
-
-#save as doc
-tab_model(
-  list(M8, M9, M10, M11),
-  show.p = TRUE,
-  p.style = "stars",
-  p.threshold = c(0.1, 0.05, 0.01),
-  dv.labels = c("M8 (Weighted, F.E.)", "M9 (Weighted, controls)",
-                "M10 (Integer, F.E.)", "M11 (Integer, controls)"),
-  collapse.ci = TRUE,
-  show.aic = TRUE,
-  title = "OLS models on negative/positive ratio measures of PTV networks",
-  string.pred = " ",
-  auto.label = FALSE,
-  terms = c("p_inst", "pola", "pint"),
-  pred.labels = c("Party institutionalization", "Political polarization", "Political interest"),
-  file = here("Output", "Article", "Table_2.doc")
-)
-```
-
-Supplement: full models
+# Models 8-11
+M8 and M11 are shown in the short form in the main article, and are reported here in their full form. M8 and M9 regress on the weighted ratio of negative to positive edges. In M8, the model only controls for country and year fixed effects. In M9, ENEP, Gallagher's index, and IHDI are added as controls. M10 and M11 have the same structure, but regress on the integer version of the ratio measure.  
 
 ```{r}
 M8 <- lm(EES_GGM_huge_np_w ~ p_inst + pola + pint + country + year, data = data)
@@ -662,6 +509,11 @@ tab_model(
   file = here("Output", "Supplement", "reg_4.doc"))
 ```
 
+# Models 12-15
+These models present robustness checks for the models shown above. All these models present the full list of covariates (as in M9 and M11). However, M12 regress on the weighted ratio of GGM-Glasso networks; M13 on the integer version of GGM-Glasso; M14 on the weighted ratio of correlational networks; M15 on its integer version. 
+
+The combined interpretation of M8 to M15 reveals only political interest present a robust associations with the relative numbers of negative edges in the PTV networks. However, this result only occur with respect to correlational network. We intepret this as weak evidence of an association between country levels of political interest and PTV network negativity. In the next set of models, we show that affective polarization is the most important variable for predicting the entity of both weighted and integer negative to positive ratio measures. 
+
 ```{r}
 M12 <- lm(EES_GGM_glasso_np_w ~ p_inst + pola + pint + country + year + ENEP + gallagher + ihdi, data = data)
 M13 <- lm(EES_GGM_glasso_np_i ~ p_inst + pola + pint + country + year + ENEP + gallagher + ihdi, data = data)
@@ -685,36 +537,8 @@ tab_model(
 
 ```
 
-### Model 16-23
-
-Article: M16- M18 (aff pola, cses); 
-```{r}
-M16 <- lm(EES_GGM_huge_aspl ~ PAP_electorate  + country + year +
-         ENEP + gallagher + ihdi + pint, data = cses_cases)
-M17 <- lm(EES_GGM_huge_np_w ~ PAP_electorate  + country + year +
-            ENEP + gallagher + ihdi + pint, data = cses_cases)
-M18 <- lm(EES_GGM_huge_np_i ~ PAP_electorate  + country + year +
-            ENEP + gallagher + ihdi + pint, data = cses_cases)
-
-#doc
-tab_model(
-  list(M16, M17, M18),
-  show.p = TRUE,
-  p.style = "stars",
-  p.threshold = c(0.1, 0.05, 0.01),
-  dv.labels = c("M16 (ASPL)", "M17 (Weighted ratio)", "M18 (Integer ratio)"),
-  collapse.ci = TRUE,
-  show.aic = TRUE,
-  title = "OLS fixed effects (country and years) on ASPL and ratio measures of PTV networks. CSES cases",
-  string.pred = " ",
-  auto.label = FALSE,
-  terms = c("PAP_electorate", "pint"),
-  pred.labels = c("Affective Polarization (electorate)", "Political interest"),
-  file = here("Output", "Article", "Table_3.doc")
-)
-```
-
-Supplment full models:
+# Models 16-18
+These models are shown in the main article in their short form, and are reported here in the full form. These results are based on the subset of EES cases that are also present in CSES data. M16 regress on the ASPL of GGM-Huge networks; M17 on the weighted ratio of GGM-Huge networks; M18 on its integer version. Variables included in the models are: partisan affective polarization calculated on the electorate ["PAP_electorate"]; country and year fixed effects; ENEP, Gallagher's index; IHDI; political interest ["pint"].
 
 ```{r}
 M16 <- lm(EES_GGM_huge_aspl ~ PAP_electorate  + country + year +
@@ -739,7 +563,9 @@ tab_model(
 
 ```
 
-Supplement: M19- M21 (aff pola partisans); 
+# Models 19-23
+These models present additional analyses for CSES cases. M19, M20 and M21 are respectively identical to M16, M17 and M18. However, here we use measures of affective polarization calculated on partisans only ["PAP_partisans]". The significant association between PAP and weighted ratio shown in M17 does not replicate for PAP_partisans. 
+
 ```{r}
 M19 <- lm(EES_GGM_huge_aspl ~ PAP_partisans  + country + year +
          ENEP + gallagher + ihdi + pint, data = cses_cases)
@@ -763,7 +589,8 @@ tab_model(
 
 ```
 
-Supplement: other networks
+# Models 22-23
+These models present robustness check for M20, and based on the subset of data that are present in CSES. We show that affective polarization calculated on the electorate ["PAP_electorate"] significantly predict the levels of the weighted ratio of negative to positive edges of the other two network models (GGM-Glasso, M22; Correlational network, M23).
 
 ```{r}
 M22 <- lm(EES_GGM_glasso_np_w ~ PAP_electorate  + country + year +
@@ -785,10 +612,6 @@ tab_model(
   file = here("Output", "Supplement", "reg_8.doc"))
 ```
 
-# Part 2: What are the consequences of network characteristics? 
-
-There are not outliers for turnout to be removed; I take the absolute of the np_w measure; I remove outliers for the np_i measure (from 143 to 136 observation); I remove outliers for the np_w measure (from 136 to 126 observation). I show models where ratio measures of huge networks predict EU turnout (turnout) and national turnout (turnout_nat). 
-
 ```{r}
 # import final data
 turnout = read_rds(here("Input", "final_data", "final_turnout.rds"))
@@ -800,8 +623,6 @@ turnout$country_year = as.factor(turnout$country_year)
 turnout$infla = as.numeric(turnout$infla)
 turnout$mand = as.factor(turnout$mand)
 ```
-
-## Outliers
 
 ```{r}
 #robustness: remove outliers from turnout (zero)
@@ -889,9 +710,8 @@ turnout <- turnout %>%
   filter(EES_GGM_huge_np_w > (mean_np - num_sd * sd_np) & EES_GGM_huge_np_w < (mean_np + num_sd * sd_np))
 ```
 
-## Fig_6 (Supplement)
-
-Here is the graph of the distributions of EU turnout and national turnout. 
+# Figure 7 
+Frequency distribution of EU and national turnouts, in percentages. The regression models of the second part of this research are based on a lower number of cases. As discussed in the article, EES data offer 143 country-year unit cases. However, we removed outliers for the integer version of the ratio measure (from 143 to 136 observations). We further remove outliers for the weighted measure (from 136 to 126 observations). In terms of statistical significance, results replicate with the full list of cases. However, additional analyses suggested us to remove these influential observations. The model we present perform better than the ones we performed in the full sample. 
 
 ```{r}
 # Data preparation
@@ -921,14 +741,10 @@ violin_plot_turnout <- ggplot(plot_data_aspl, aes(x = myaxis, y = Value, fill = 
   ) +
   labs(title = "Aggregated distribution of Turnout", x = "", y = "Turnout") +
   scale_x_discrete(labels = c("EU Turnout", "National Turnout"))
-
-print(violin_plot_turnout)
-
-#save
-ggsave(here("Output", "Supplement", "Fig_6.jpg"), violin_plot_turnout, width = 16, height = 9, dpi = 600)
 ```
 
-## Data managment for regressions
+![Figure 7](../Output/Supplement/Fig_6.jpg) 
+
 
 ```{r}
 # np_w as absoulte value
@@ -965,7 +781,9 @@ turnout$turnout = rescale01(turnout$turnout)
 turnout$turnout_nat = rescale01(turnout$turnout_nat)
 ```
 
-## Models 24-35 (Supplement)
+# Models 24-26
+The results of M24 are visualized in Figure 2 of the main article. This model has EU turnout as the dependent variable, and the weighted ratio of negative to positive edges of GGM-Huge PTV networks as the main predictor. Other variables included in the model are country and year fixed effects, IHDI, polarization, ENEP. M25 and M26 replicate the same analyses, but with the weighted ratio measures of GGM-Huge and correlational network respectively. The results of these models suggest connectivity measures are always marginally associated with EU turnout (p-values of 0.1 or lower). At the opposite, the associations between the weighted ratio and EU turnout are always significant at 0.01 for partial correlation networks (M24, M25), and at 0.05 for the correlational one. 
+
 ```{r}
 # reg turnout
 M24 = lm(turnout ~ EES_GGM_huge_np_w + EES_GGM_huge_aspl + country + year + ihdi + 
@@ -990,6 +808,9 @@ tab_model(list(M24, M25, M26),
 
 ```
 
+# Models 27-29
+These models replicate M24-M26, but with national turnout as the dependent variable. For each country-year unit, national turnout is taken at the next election following the European ones. Results reinforce the pattern observed above. Connectivity measures are never significant, the ones of the weighted ratios are always significant. Only the coefficient of the weighted ratio of correlational network has p value = 0.05, the other two measures have p value of 0.001. 
+
 ```{r}
 M27 = lm(turnout_nat ~ EES_GGM_huge_np_w + EES_GGM_huge_aspl + country + year + ihdi + 
            pola + ENEP, data = turnout)
@@ -1011,6 +832,10 @@ tab_model(list(M27, M28, M29),
           auto.label = TRUE,
           file = here("Output", "Supplement", "reg_10.doc"))
 ```
+
+
+# Models 30-35
+Models 30 to 32 replicate M24-M26, but with the integer ratio of negativity as the main independent variable. Models 33 to 35 replicate M27-M29, once again with the integer ratio replacing the weighted one. The integer ratio always display weaker associations with both EU and national turnout, if compared to weighted version. Connectivity measures remain almost uncorrelated with turnout. The only exception to this pattern are the significant coefficients of the integer ratio of correlational networks.   
 
 ```{r}
 # reg turnout
@@ -1043,242 +868,3 @@ tab_model(list(M30, M31, M32, M33, M34, M35),
           file = here("Output", "Supplement", "reg_11.doc"))
 
 ```
-
-## Figure 2 (Article)
-
-
-```{r}
-#Figure_2
-
-# Get the predicted values and confidence intervals using ggeffects
-predicted_values <- ggeffects::predict_response(M24, terms = "EES_GGM_huge_np_w",
-                                                margin = "marginalmeans") %>%
-  as.data.frame()
-
-# Mutate the country_year column in the original data
-data_scatt_2 <- turnout %>%
-  mutate(
-    iso2c = countrycode(substr(country_year, 1, 3), "iso3c", "iso2c"),
-    year = substr(country_year, 7, 8),
-    country_year_modified = paste(iso2c, year, sep = "_")
-  )
-
-# Rename variables in predicted_values to avoid conflicts
-predicted_values <- predicted_values %>%
-  rename(EES_GGM_huge_np_w = x, predicted_turnout = predicted)
-
-# Plot with the true regression line and SE
-scatt2 <- ggplot(data_scatt_2, aes(x = EES_GGM_huge_np_w, y = turnout)) +
-  geom_point(size = 1) +
-  geom_ribbon(data = predicted_values, aes(x = EES_GGM_huge_np_w, ymin = conf.low, ymax = conf.high), inherit.aes = FALSE, alpha = 0.2, fill = "#69b3a2") +
-  geom_line(data = predicted_values, aes(x = EES_GGM_huge_np_w, y = predicted_turnout), inherit.aes = FALSE, color = "pink", size = 1) +
-  theme(plot.margin = margin(0, 0, 0, 0, "pt")) +
-  theme_ipsum(base_size = 14) +
-  labs(x = "Ratio negative positive edges",
-       y = "EU turnout") +
-  geom_text_repel(data = subset(data_scatt_2, !country_year_modified %in% c("IE_94", "AT_19")),
-                  aes(label = country_year_modified), size = 2) +
-  geom_label_repel(data = subset(data_scatt_2, country_year_modified %in% c("IE_94", "AT_19")),
-                   aes(label = country_year_modified),
-                   size = 3,
-                   box.padding = 0.3,
-                   point.padding = 0.5,
-                   label.size = 0.25,
-                   fill = 'white',
-                   color = 'black')
-
-print(scatt2)
-
-#save
-ggsave(here("Output", "Article", "Figure_2.jpg"), scatt2, width = 180, height = 180, units = "mm", dpi = 600)
-```
-
-Here is the scatterplot for the national elections
-
-```{r}
-#Figure_3
-
-# Get the predicted values and confidence intervals using ggeffects
-predicted_values_M27 <- ggpredict(M27, terms = "EES_GGM_huge_np_w",
-                                                margin = "marginalmeans") %>%
-  as.data.frame()
-
-# Mutate the country_year column in the original data
-data_scatt_3 <- turnout %>%
-  mutate(
-    iso2c = countrycode(substr(country_year, 1, 3), "iso3c", "iso2c"),
-    year = substr(country_year, 7, 8),
-    country_year_modified = paste(iso2c, year, sep = "_")
-  )
-
-# Rename variables in predicted_values to avoid conflicts
-predicted_values_M27 <- predicted_values_M27 %>%
-  rename(EES_GGM_huge_np_w = x, predicted_turnout_nat = predicted)
-
-# Plot with the true regression line and SE
-scatt3 <- ggplot(data_scatt_3, aes(x = EES_GGM_huge_np_w, y = turnout_nat)) +
-  geom_point(size = 1) +
-  geom_ribbon(data = predicted_values_M27, aes(x = EES_GGM_huge_np_w, ymin = conf.low, ymax = conf.high), inherit.aes = FALSE, alpha = 0.2, fill = "#69b3a2") +
-  geom_line(data = predicted_values_M27, aes(x = EES_GGM_huge_np_w, y = predicted_turnout_nat), inherit.aes = FALSE, color = "pink", size = 1) +
-  theme(plot.margin = margin(0, 0, 0, 0, "pt")) +
-  theme_ipsum(base_size = 14) +
-  labs(x = "Ratio negative positive edges",
-       y = "National turnout") +
-  geom_text_repel(data = subset(data_scatt_3, !country_year_modified %in% c("IE_94", "AT_19")),
-                  aes(label = country_year_modified), size = 2) +
-  geom_label_repel(data = subset(data_scatt_3, country_year_modified %in% c("IE_94", "AT_19")),
-                   aes(label = country_year_modified),
-                   size = 3,
-                   box.padding = 0.3,
-                   point.padding = 0.5,
-                   label.size = 0.25,
-                   fill = 'white',
-                   color = 'black')
-
-print(scatt3)
-
-#save
-ggsave(here("Output", "Article", "Figure_2_national.jpg"), scatt3, width = 180, height = 180, units = "mm", dpi = 600)
-```
-
-The combined plot
-
-```{r, echo=FALSE}
-## Combine the plots using patchwork
-#combined_plot_2 <- scatt2 + scatt3
-#plot_layout(ncol = 1, heights = c(0, 0, 0), guides = "collect") & 
-#theme(plot.margin = margin(0,0,0,0, "cm"))
-#
-## Print the combined plot
-#print(combined_plot_2)
-#
-###save
-##ggsave(here("Output", "Article", "Figure_2.jpg"), combined_plot_2, width = 180, #height = 90, units = "mm", dpi = 600)
-```
-
-Figure 3 with pola rather than ratio measure
-```{r}
-#Figure_3
-
-# Get the predicted values and confidence intervals using ggeffects
-predicted_values_M27 <- ggpredict(M27, terms = "pola",
-                                                margin = "marginalmeans") %>%
-  as.data.frame()
-
-# Mutate the country_year column in the original data
-data_scatt_3 <- turnout %>%
-  mutate(
-    iso2c = countrycode(substr(country_year, 1, 3), "iso3c", "iso2c"),
-    year = substr(country_year, 7, 8),
-    country_year_modified = paste(iso2c, year, sep = "_")
-  )
-
-# Rename variables in predicted_values to avoid conflicts
-predicted_values_M27 <- predicted_values_M27 %>%
-  rename(pola = x, predicted_turnout_nat = predicted)
-
-# Plot with the true regression line and SE
-scatt3 <- ggplot(data_scatt_3, aes(x = pola, y = turnout_nat)) +
-  geom_point(size = 1) +
-  geom_ribbon(data = predicted_values_M27, aes(x = pola, ymin = conf.low, ymax = conf.high), inherit.aes = FALSE, alpha = 0.2, fill = "#69b3a2") +
-  geom_line(data = predicted_values_M27, aes(x = pola, y = predicted_turnout_nat), inherit.aes = FALSE, color = "pink", size = 1) +
-  theme(plot.margin = margin(0, 0, 0, 0, "pt")) +
-  theme_ipsum(base_size = 14) +
-  labs(x = "Political polarization",
-       y = "National turnout") +
-  geom_text_repel(data = subset(data_scatt_3, !country_year_modified %in% c("IE_94", "AT_19")),
-                  aes(label = country_year_modified), size = 2)
-
-print(scatt3)
-
-#save
-ggsave(here("Output", "Article", "Figure_3_national_pola.jpg"), scatt3, width = 180, height = 180, units = "mm", dpi = 600)
-```
-
-## Figure_3
-
-```{r}
-# import network data to show examples
-EES_data = read_rds(here("Input", "data", "EES.rds"))
-
-#Network models
-irl_94_fit = estimateNetwork(EES_data[["1994"]][["IRL"]], default = "huge", tuning = 0.15)
-aut_19_fit = estimateNetwork(EES_data[["2019"]][["AUT"]], default = "huge", tuning = 0.15)
-
-#Network matrices for highlighted cases
-irl_94 = irl_94_fit$graph
-aut_19 = aut_19_fit$graph
-
-#irl_94
-shortnames_irl_94 = c("GP", "DL", "Lab", "PD", "FG", "FF", "SF")
-longnames_irl_94 = c("Green Party", "Democratic Left", "Labour Party", "Progressive Democrats", "Fine Gael", 
-                     "Fianna Fail", "Sinn Fein")
-
-#irl_94
-irl_94_graph<-qgraph(irl_94, 
-  layout = "spring", theme = "Borkulo", GLratio = 2,
-  labels = shortnames_irl_94, nodeNames = longnames_irl_94,
-  label.scale=FALSE, label.cex = 1, borders = F,
-  legend.cex = 0.45, legend = TRUE, details = FALSE, vsize=7.0,
- title = "Ireland 1994", color = "#69b3a2",
- filetype="jpg", filename=here("Output", "Article", "Figure_3", "Figure_3_a"))
-
-#aut_19
-shortnames_aut_19 = c("ÖVP", "SPÖ", "NEOS", "DG", "FPÖ", "JETZT")
-longnames_aut_19 = c("Austrian People's Party", "Austrian Social Democratic Party", "The New Austria and Liberal Forum", "The Greens", "Austrian Freedom Party", "Alliance for the Future of Austria")
-
-aut_19_graph<-qgraph(aut_19, GLratio = 2, 
-  layout = "spring", theme = "Borkulo", 
-  labels = shortnames_aut_19, nodeNames = longnames_aut_19,
-  label.scale=FALSE, label.cex = 1, borders = F,
-  legend.cex = 0.45, legend = TRUE, details = FALSE, vsize=7.0,
- title = "Austria 2019", color = "#69b3a2",
- filetype="jpg", filename=here("Output", "Article", "Figure_3", "Figure_3_b"))
-```
-
-## Fig_7 (Supplement)
-A closer inspection of the variable mandatory voting. It was previously scoring 1 for countries with STRICT legislation for mandatory voting. It is now scoring 1 also for countries with WEAK legislation for mandatory voting (this is the coding of the IDEA database). 
-
-Mandatory voting is not so highly correlated with country (biserial r = 0.22), but the association is significant (chisq pval = 0.000). Here is a table between country and mandatory voting. 
-
-```{r, include=FALSE, warning=FALSE}
-#country_num = as.numeric(turnout$country)
-#mand_num = as.numeric(turnout$mand)
-#
-#biserial.cor(country_num, mand_num)
-#stats::chisq.test(country_num, mand_num)
-```
-
-```{r}
-#tab_1 = turnout %>% 
-#  select(country_year, country, mand)
-#
-## Print the table 
-#kable(tab_1, caption = "Table 1: Country and Mandatory voting") %>%
-#  kable_styling(bootstrap_options = "striped",
-#                full_width = T)
-```
-
-Here a modified scatterplot which indicates mandatory voting is likely to have a significant impact on this relationship. 
-The countries with higher turnout are indeed those with the strict legislation on compulsory voting. These are: Belgium, Luxembourg, Greece. 
-
-```{r}
-# Plot with colored dots
-scatt_mand <- ggplot(data_scatt_2, aes(x = EES_GGM_huge_np_w, y = turnout, color = as.factor(mand))) +
-  geom_point(size = 1) +
-  geom_smooth(method = lm, color = "pink", fill = "#69b3a2", se = TRUE) +
-  theme(plot.margin = margin(0, 0, 0, 0, "pt")) +
-  theme_ipsum() +
-  labs(x = "Ratio negative positive edges",
-       y = "EU turnout",
-       color = "Mandatory voting") +  
-  geom_text_repel(aes(label = country_year_modified), size = 2)
-
-print(scatt_mand)
-
-#save
-ggsave(here("Output", "Supplement", "Fig_7.jpg"), scatt_mand, width = 16, height = 9, dpi = 600)
-```
-
-
-
