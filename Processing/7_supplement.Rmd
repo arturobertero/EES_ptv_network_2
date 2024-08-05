@@ -3,6 +3,8 @@ title: 'Supplemental material for the article: Consequences and determinants of 
   networks in Europe between 1989 and 2019'
 author: "Arturo Bertero, Mark Brandt"
 output:
+  html_document:
+    df_print: paged
   pdf_document: default
 ---
 
