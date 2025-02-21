@@ -21,284 +21,94 @@ EES = read_rds(here("Input", "data", "EES.rds"))
 ```{r}
 #calculate true N per wave
 
-# the function
-calculate_total_rows <- function(year_list) {
-  total_rows <- map_dbl(year_list, nrow)
-  sum(total_rows)
+# Function to calculate total rows for each country within a year
+calculate_total_rows_per_country <- function(year_list) {
+  map_dbl(year_list, nrow) %>% tibble(Country = names(.), N = .)
 }
 
-# Apply the function 
-total_rows_per_year <- map_dbl(EES, calculate_total_rows)
+# Apply function to all years and bind results
+total_rows_long <- map_dfr(EES, calculate_total_rows_per_country, .id = "Year")
 
-# Convert the result to a data frame 
-total_rows_df <- data.frame(
-  Year = names(total_rows_per_year),
-  TotalRows = total_rows_per_year
-)
+# Reshape the data to have countries as rows and years as columns
+total_rows_wide <- total_rows_long %>%
+  pivot_wider(names_from = Year, values_from = N, values_fill = 0)  # Fill missing values with 0
 
+# Print final table
+print(total_rows_wide)
 ```
 
 
 # Processing
 
-## GGM_glasso
+## Individual level networks
 
 ```{r}
-# initialize list
-EES_GGM_glasso = list()
-
-# Loop for year
-for(year in names(EES)) {
-  EES_GGM_glasso[[year]] = list()
+# Function to compute conceptual distance matrix for an individual's PTV scores
+compute_difference_matrix <- function(ptv_row) {
+  ptv_values <- as.numeric(ptv_row)  # Convert to numeric
+  party_labels <- names(ptv_row)  # Extract column names
   
-  # Loop for country
-  for(country_code in names(EES[[year]])) {
-    tryCatch({
-      # Attempt to process the data
-      country_data = EES[[year]][[country_code]]
-      network_estimate = estimateNetwork(country_data, default = "EBICglasso", tuning = 0.15)
-      
-      # If successful, store the result and set the name
-      EES_GGM_glasso[[year]][[country_code]] = network_estimate
-      names(EES_GGM_glasso[[year]])[length(EES_GGM_glasso[[year]])] = country_code
-    }, error = function(e) {
-      cat("Error processing", country_code, "in year", year, ": ", e$message, "\n")
-    })
+  # Ensure that we have valid party labels
+  if (length(ptv_values) < 2) {
+    return(NULL)  # If fewer than 2 parties, return NULL (to prevent errors)
   }
-}
-
-```
-
-```{r}
-# remove all but "graph", and transform into a df
-
-# Loop for year
-for(year in names(EES_GGM_glasso)) {
-  # Loop for country 
-  for(country_code in names(EES_GGM_glasso[[year]])) {
-    # Access the 'graph' object 
-    graph_object = EES_GGM_glasso[[year]][[country_code]][["graph"]]
-    
-    # Assemble the final list with 'graph' as a data frame
-    EES_GGM_glasso[[year]][[country_code]] = list(graph = graph_object)
-  }
-}
-
-```
-
-## GGM_huge
-
-```{r}
-# initialize list
-EES_GGM_huge = list()
-
-# Loop for year
-for(year in names(EES)) {
-  EES_GGM_huge[[year]] = list()
   
-  # Loop for country
-  for(country_code in names(EES[[year]])) {
-    tryCatch({
-      # Attempt to process the data
-      country_data = EES[[year]][[country_code]]
-      network_estimate = estimateNetwork(country_data, default = "huge", tuning = 0.15)
-      
-      # If successful, store the result and set the name
-      EES_GGM_huge[[year]][[country_code]] = network_estimate
-      names(EES_GGM_huge[[year]])[length(EES_GGM_huge[[year]])] = country_code
-    }, error = function(e) {
-      cat("Error processing", country_code, "in year", year, ": ", e$message, "\n")
-    })
-  }
-}
-```
-
-```{r}
-# remove all but "graph", and transform into a df
-
-# Loop for year
-for(year in names(EES_GGM_huge)) {
-  # Loop for country 
-  for(country_code in names(EES_GGM_huge[[year]])) {
-    # Access the 'graph' object 
-    graph_object = EES_GGM_huge[[year]][[country_code]][["graph"]]
-    
-    # Assemble the final list with 'graph' as a data frame
-    EES_GGM_huge[[year]][[country_code]] = list(graph = graph_object)
-  }
-}
-
-```
-
-## EGA
-
-```{r}
-# initialize list
-EES_EGA = list()
-
-# Loop for year
-for(year in names(EES)) {
-  EES_EGA[[year]] = list()
+  # Generate all pairwise combinations of parties
+  pairwise_combinations <- expand.grid(Party = party_labels, Compared_Party = party_labels, stringsAsFactors = FALSE)
   
-  # Loop for country
-  for(country_code in names(EES[[year]])) {
-    tryCatch({
-      # Attempt to process the data
-      country_data = EES[[year]][[country_code]]
-      network_estimate = EGA(country_data, corr = "spearman", model = "glasso",
-                             plot.EGA = F)
-      
-      # If successful, store the result and set the name
-      EES_EGA[[year]][[country_code]] = network_estimate
-      names(EES_EGA[[year]])[length(EES_EGA[[year]])] = country_code
-    }, error = function(e) {
-      cat("Error processing", country_code, "in year", year, ": ", e$message, "\n")
-    })
-  }
-}
-
-```
-
-```{r}
-# remove all but "n.dim", and transform into a vector
-
-# Loop for each year in the list
-for(year in names(EES_EGA)) {
-  # Loop for each country in the list
-  for(country_code in names(EES_EGA[[year]])) {
-    # Get the value of the n.dim element
-    n_dim_value = EES_EGA[[year]][[country_code]][["n.dim"]]
-    
-    # Preserve only that value 
-    EES_EGA[[year]][[country_code]] = list(n.dim = n_dim_value)
-  }
-}
-
-```
-
-## CCA
-
-```{r}
-# initialize list
-EES_CCA = list()
-
-# Loop for year
-for(year in names(EES)) {
-  EES_CCA[[year]] = list()
+  # Compute absolute differences 
+  pairwise_combinations$Difference <- abs(ptv_values[match(pairwise_combinations$Party, party_labels)] -
+                                          ptv_values[match(pairwise_combinations$Compared_Party, party_labels)])
   
-  # Loop for country
-  for(country_code in names(EES[[year]])) {
-    tryCatch({
-      # Attempt to process the data
-      country_data = EES[[year]][[country_code]]
-      network_estimate = cca(country_data, filter.significance = T, filter.value = 0.05,
-                             zero.action = "ownclass", verbose = F)
-      
-      # If successful, store the result and set the name
-      EES_CCA[[year]][[country_code]] = network_estimate
-      names(EES_CCA[[year]])[length(EES_CCA[[year]])] = country_code
-    }, error = function(e) {
-      cat("Error processing", country_code, "in year", year, ": ", e$message, "\n")
-    })
+  return(pairwise_combinations)
+}
+
+# Function to generate difference matrices for each country-year dataset
+generate_difference_matrices <- function(country_data) {
+  country_data %>%
+    select(starts_with("t_var_ptv")) %>%  # Ensure only PTV variables are selected
+    rowwise() %>%
+    mutate(Difference_Matrix = list(compute_difference_matrix(cur_data()))) %>%  # Use cur_data() to keep names
+    ungroup() %>%
+    select(Difference_Matrix)  # Keep only the difference matrix column
+}
+
+# Apply the function across the hierarchical EES list
+EES_mat <- map(EES, function(year_data) {
+  map(year_data, generate_difference_matrices)
+})
+
+## Mean Constraint Computation
+
+# Function to compute mean constraint (average absolute difference score) for an individual
+compute_mean_constraint <- function(difference_matrix) {
+  if (!is.null(difference_matrix)) {
+    return(mean(difference_matrix$Difference, na.rm = TRUE)) # Compute mean absolute difference
+  } else {
+    return(NA_real_)  # Return NA if no difference matrix is available
   }
 }
 
-```
-
-```{r}
-# remove all but "modules", and transform into a vector
-
-# Loop over each year in the EES_CCA list
-for(year in names(EES_CCA)) {
-  # Loop over each country within the year
-  for(country in names(EES_CCA[[year]])) {
-    # Get the length of the original modules list
-    modules_length <- length(EES_CCA[[year]][[country]][["modules"]])
-    
-    # Eliminate all objects except for the modules object and set its value
-    # to the length of the original modules list
-    EES_CCA[[year]][[country]] <- list(modules = modules_length)
-  }
+# Function to add mean constraint to each dataset
+add_mean_constraint <- function(country_data, country_name, year) {
+  country_data %>%
+    mutate(Mean_Constraint = map_dbl(EES_mat[[year]][[country_name]][["Difference_Matrix"]], compute_mean_constraint))
 }
 
-```
+# Apply function across all year-country datasets 
+EES <- map(names(EES), function(year) {
+  map(names(EES[[year]]), function(country_name) {
+    add_mean_constraint(EES[[year]][[country_name]], country_name, year)
+  }) %>% set_names(names(EES[[year]])) # Preserve country names
+}) %>% set_names(names(EES)) # Preserve year names
 
-## Cor
-
-```{r}
-# initialize list
-EES_COR = list()
-
-# Loop for year
-for(year in names(EES)) {
-  EES_COR[[year]] = list()
-  
-  # Loop for country
-  for(country_code in names(EES[[year]])) {
-    tryCatch({
-      # Attempt to process the data
-      country_data = EES[[year]][[country_code]]
-      network_estimate = cor_auto(country_data, npn.SKEPTIC = T, ordinalLevelMax = 5, forcePD = TRUE, verbose = T)
-      
-      # If successful, store the result and set the name
-      EES_COR[[year]][[country_code]] = network_estimate
-      names(EES_COR[[year]])[length(EES_COR[[year]])] = country_code
-    }, error = function(e) {
-      cat("Error processing", country_code, "in year", year, ": ", e$message, "\n")
-    })
-  }
-}
-```
-
-## Make structure uniform
-
-```{r}
-# make _huge list equal to _COR list
-
-# Loop for year 
-for (year in names(EES_GGM_huge)) {
-  
-  # Loop for country 
-  for (country_code in names(EES_GGM_huge[[year]])) {
-    
-    # Extract the graph object
-    graph <- EES_GGM_huge[[year]][[country_code]][["graph"]]
-    
-    # Assign the graph object to the upper level of the list
-    EES_GGM_huge[[year]][[country_code]] <- graph
-  }
-}
 
 ```
-
-```{r}
-# make _glasso list equal to _COR list
-
-# Loop for year 
-for (year in names(EES_GGM_glasso)) {
-  
-  # Loop for country 
-  for (country_code in names(EES_GGM_glasso[[year]])) {
-    
-    # Extract the graph object
-    graph <- EES_GGM_glasso[[year]][[country_code]][["graph"]]
-    
-    # Assign the graph object to the upper level of the list
-    EES_GGM_glasso[[year]][[country_code]] <- graph
-  }
-}
-
-```
-
 
 # Output
 
 ```{r}
 # save model files
-saveRDS(EES_GGM_huge, here("Input", "models", "EES_GGM_huge.rds"))
-saveRDS(EES_GGM_glasso, here("Input", "models", "EES_GGM_glasso.rds"))
-saveRDS(EES_EGA, here("Input", "models", "EES_EGA.rds"))
-saveRDS(EES_COR, here("Input", "models", "EES_COR.rds"))
-saveRDS(EES_CCA, here("Input", "models", "EES_CCA.rds"))
+saveRDS(EES, here("Input", "models", "EES_constraint.rds"))
 ```
 

@@ -20,8 +20,56 @@ conflict_prefer("filter", "dplyr")
 
 ```{r}
 # import DV 
-DV = read_rds(here("Input", "final_data", "DV.rds"))
+DV = read_rds(here("Input", "models", "EES_constraint.rds"))
 
+# Append BEL cases
+
+# 1989
+DV[["1989"]][["BEL"]] <- bind_rows(DV[["1989"]][["BEL"]], DV[["1989"]][["XXX"]])
+DV[["1989"]][["XXX"]] <- NULL
+
+# 1994
+DV[["1994"]][["BEL"]] <- bind_rows(DV[["1994"]][["BEL"]], DV[["1994"]][["XXX"]])
+DV[["1994"]][["XXX"]] <- NULL
+
+# 1999
+DV[["1999"]][["BEL"]] <- bind_rows(DV[["1999"]][["BEL"]], DV[["1999"]][["XXX"]])
+DV[["1999"]][["XXX"]] <- NULL
+
+# 2009
+DV[["2009"]][["BEL"]] <- bind_rows(DV[["2009"]][["BEL"]], DV[["2009"]][["XXX"]])
+DV[["2009"]][["XXX"]] <- NULL
+
+# 2014
+DV[["2014"]][["BEL"]] <- bind_rows(DV[["2014"]][["BEL"]], DV[["2014"]][["XXX"]])
+DV[["2014"]][["XXX"]] <- NULL
+
+# 2019
+DV[["2019"]][["BEL"]] <- bind_rows(DV[["2019"]][["BEL"]], DV[["2019"]][["XXX"]])
+DV[["2019"]][["XXX"]] <- NULL
+```
+
+```{r}
+#calculate true N per wave
+
+# Function to calculate total rows for each country within a year
+calculate_total_rows_per_country <- function(year_list) {
+  map_dbl(year_list, nrow) %>% tibble(Country = names(.), N = .)
+}
+
+# Apply function to all years and bind results
+total_rows_long <- map_dfr(DV, calculate_total_rows_per_country, .id = "Year")
+
+# Reshape the data to have countries as rows and years as columns
+total_rows_wide <- total_rows_long %>%
+  pivot_wider(names_from = Year, values_from = N, values_fill = 0)  # Fill missing values with 0
+
+# Print final table
+print(total_rows_wide)
+```
+
+
+```{r}
 #import IVs
 age_d = read_rds(here("Input", "final_data", "IV", "age_d_long.rds"))
 alt_inf = read_rds(here("Input", "final_data", "IV", "alt_inf_long.rds"))
@@ -36,125 +84,10 @@ turnout = read_rds(here("Input", "final_data", "IV", "turnout_long.rds"))
 IHDI = read_rds(here("Input", "final_data", "IV", "IHDI_long.rds"))
 ENEP = read_rds(here("Input", "final_data", "IV", "ENEP_long.rds"))
 gallagher = read_rds(here("Input", "final_data", "IV", "gallagher_long.rds"))
-```
-
-
-# Processing
-
-## cor df
-
-```{r}
-# select cor Vs
-cor_df = DV %>% 
-  select(country,year,country_year,EES_COR_aspl,EES_COR_constraint,EES_COR_np_i,
-         EES_COR_np_w,EES_CCA,EES_EGA)
-
-# means for belgium
-cor_df <- cor_df %>%
-  group_by(country_year) %>%
-  summarise(across(where(is.numeric), mean, na.rm = TRUE),  
-            across(where(is.character), first)) %>% 
-  select(country, year, country_year, EES_COR_aspl,EES_COR_constraint,EES_COR_np_i,
-         EES_COR_np_w,EES_CCA,EES_EGA)
-
-
+aff_pola = read_rds(here("Input", "final_data", "IV", "aff_pola_long.rds"))
 ```
 
 ```{r}
-#merge 
-
-# Initialize final_data, list of dfs
-final_cor <- cor_df
-data_frames <- list(age_d, alt_inf, educ, ideol, mass_mob, p_inst, p_inst_k, pint,
-                    pola, turnout, IHDI,ENEP, gallagher)
-
-# Loop t
-for(df in data_frames) {
-  # Extract the name of the fourth column
-  col_name <- names(df)[4]
-  
-  # Merge 
-  final_cor <- merge(final_cor, df[, c("country_year", col_name)], by = "country_year", all.x = TRUE)
-}
-
-# manually adjust 0 for DEU 1989 in age_d
-final_cor[23,10] = 0
-
-```
-
-## pcor df
-
-```{r}
-# select cor Vs
-pcor_df = DV %>% 
-  select(country,year,country_year,EES_GGM_glasso_aspl,EES_GGM_glasso_constraint,
-         EES_GGM_glasso_np_i,EES_GGM_glasso_np_w,EES_GGM_huge_aspl,EES_GGM_huge_constraint,
-         EES_GGM_huge_np_i,EES_GGM_huge_np_w,EES_CCA,EES_EGA)
-
-#exclude BEL 1999 which is an empty network
-pcor_df <- pcor_df %>% 
-  slice(-10)
-
-# means for belgium
-pcor_df <- pcor_df %>%
-  group_by(country_year) %>%
-  summarise(across(where(is.numeric), mean, na.rm = TRUE),  
-            across(where(is.character), first)) %>% 
-  select(country,year,country_year,EES_GGM_glasso_aspl,EES_GGM_glasso_constraint,
-         EES_GGM_glasso_np_i,EES_GGM_glasso_np_w,EES_GGM_huge_aspl,EES_GGM_huge_constraint,
-         EES_GGM_huge_np_i,EES_GGM_huge_np_w,EES_CCA,EES_EGA)
-
-```
-
-
-```{r}
-#merge 
-
-# Initialize final_data, list of dfs
-final_pcor <- pcor_df
-data_frames <- list(age_d, alt_inf, educ, ideol, mass_mob, p_inst, p_inst_k, pint,
-                    pola, turnout,IHDI,ENEP, gallagher)
-
-# Loop t
-for(df in data_frames) {
-  # Extract the name of the fourth column
-  col_name <- names(df)[4]
-  
-  # Merge 
-  final_pcor <- merge(final_pcor, df[, c("country_year", col_name)], by = "country_year", all.x = TRUE)
-}
-
-# manually adjust 0 for DEU 1989 in age_d
-final_pcor[23,14] = 0
-
-```
-
-## final
-
-```{r}
-#final merge 
-final = final_pcor
-final$EES_COR_aspl = final_cor$EES_COR_aspl
-final$EES_COR_constraint = final_cor$EES_COR_constraint
-final$EES_COR_np_i = final_cor$EES_COR_np_i
-final$EES_COR_np_w = final_cor$EES_COR_np_w
-
-#remove asterisks from ENEP and gallagher
-final = final %>% 
-  mutate(across(everything(), ~str_remove_all(.x, "\\*$")))
-
-#all numeric
-final <- final %>%
-  mutate(across(-c(country, year, country_year), as.numeric))
-```
-
-## Turnout dfs
-
-```{r}
-# create turnout for the analyses of consequences of network characteristics
-turnout_df = final %>% 
-  select(country_year:EES_GGM_huge_np_w, educ:EES_COR_np_w) 
-
 #Import IDEA data for national turnout and mandatory voting
 #turnout_idea = read_xlsx(here("Input", "data", "idea.xlsx")) %>% 
 #  select(ISO3, Election_Type, Year, Voter_Turnout, mand) %>% 
@@ -176,67 +109,125 @@ turnout_idea = read_xlsx(here("Input", "data", "idea2.xlsx")) %>%
          mand = ifelse(mand == "No", 0, ifelse(mand == "Yes", 1, mand))) %>% 
   select(ISO3, Year, country_year, turnout_nat, mand) %>% 
   rename(country = ISO3, year = Year)
-
-#merge with turnout_df
-turnout_df <- merge(turnout_df, 
-                    turnout_idea[, c("country_year", "turnout_nat", "mand")], 
-                    by = "country_year", 
-                    all.x = TRUE)
-
 ```
-
 
 ```{r}
 # gdp
 gdp = read_csv(here("Input", "data", "gdp.csv")) 
 gdp$`Country or Area` = countrycode(gdp$`Country or Area`, "country.name", "iso3c")
 
-#find unique ISO code
-unique_countries = DV %>% 
-  distinct(country)
+# Extract unique country ISO codes from DV
+iso_codes_in_DV <- unique(unlist(map(DV, names))) 
 
-gdp = gdp %>% 
-    filter(`Country or Area` %in% unique_countries$country,
-         Year == "1989" |
-         Year == "1994" |
-         Year == "1999" |
-         Year == "2004" |
-         Year == "2009" |
-         Year == "2014" |
-         Year == "2019") %>% 
-  rename(year = Year,
-         country = `Country or Area`,
-         gdp = Value) %>% 
-  mutate(country_year = paste(country, year, sep = "_")) %>% 
+# Filter GDP data to include only countries in DV
+gdp_filtered <- gdp %>%
+  filter(`Country or Area` %in% iso_codes_in_DV) %>%
+  rename(country = `Country or Area`, year = Year) %>%  # Standardize variable names
+  mutate(country_year = paste0(country, "_", year)) # Create merging key
+
+# rename and select
+gdp = gdp_filtered %>% 
+  rename(gdp = Value) %>% 
   select(country, year, country_year, gdp)
 ```
 
 ```{r}
 # inflation
-infla = read_excel(here("Input", "data", "infla.xlsx")) %>% 
-  select(`Country Code`: `2019 [YR2019]`) %>% 
-  filter(`Country Code` %in% unique_countries$country) %>% 
-  pivot_longer(cols = c(`1989 [YR1989]`, `1994 [YR1994]`, `1999 [YR1999]`, 
-             `2004 [YR2004]`, `2009 [YR2009]`, `2014 [YR2014]`, 
-             `2019 [YR2019]`),
-    names_to = "year") %>% 
-    mutate(year = sub(" .*", "", year)) %>% 
-  rename(country = `Country Code`,
-         infla = value) %>% 
-  mutate(country_year = paste(country, year, sep = "_")) %>% 
-  select(country, year, country_year, infla)
+infla = read_excel(here("Input", "data", "infla.xlsx")) 
+
+# Convert country names to ISO3 codes
+infla <- infla %>%
+  mutate(country = countrycode(`Country Name`, "country.name", "iso3c")) 
+
+# Extract unique country ISO codes from DV
+iso_codes_in_DV <- unique(unlist(map(DV, names))) 
+
+# Filter only relevant countries
+infla_filtered <- infla %>%
+  filter(country %in% iso_codes_in_DV) %>%
+  select(country, matches("^\\d{4}")) %>%  # Select only columns that start with 4-digit years
+  pivot_longer(cols = -country, names_to = "year", values_to = "inflation") %>%  # Reshape wide to long
+  mutate(
+    year = as.integer(str_extract(year, "\\d{4}")),  # Extract only the 4-digit year
+    country_year = paste0(country, "_", year)  # Create merging key
+  )
+
+
 ```
 
+# Processing
 
 ```{r}
-# merge gdp and inflation to turnout 
+# Function to remove labels from all variables in a dataset
+zap_labels_from_df <- function(df) {
+  df %>% mutate(across(everything(), haven::zap_labels))
+}
 
-# Merge the 'gdp' column from the 'gdp' dataframe
-final_turnout <- merge(turnout_df, gdp[, c("country_year", "gdp")], by = "country_year", all.x = TRUE)
+# Create a cleaned version of DV without modifying the original list
+DV_clean <- map(DV, function(year_data) {
+  map(year_data, zap_labels_from_df)
+})
 
-# Merge the 'infla' column from the 'infla' dataframe
-final_turnout <- merge(final_turnout, infla[, c("country_year", "infla")], by = "country_year", all.x = TRUE)
+```
 
+```{r}
+# Flatten DV_clean into long format
+DV_long <- map_dfr(names(DV_clean), function(year) {
+  map_dfr(names(DV_clean[[year]]), function(country) {
+    DV_clean[[year]][[country]] %>%
+      mutate(
+        year = as.integer(year),   
+        country = country,         
+        country_year = paste0(country, "_", year) 
+      )
+  })
+})
+
+
+```
+
+```{r}
+# List of country-year datasets (keeping only relevant columns)
+country_data_list <- list(
+  age_d %>% select(country_year, age_d),
+  alt_inf %>% select(country_year, alt_inf),
+  educ %>% select(country_year, educ),
+  ideol %>% select(country_year, ideol),
+  mass_mob %>% select(country_year, mass_mob),
+  p_inst_k %>% select(country_year, p_inst_k),
+  p_inst %>% select(country_year, p_inst),
+  pint %>% select(country_year, pint),
+  pola %>% select(country_year, pola),
+  turnout %>% select(country_year, turnout),
+  IHDI %>% select(country_year, ihdi),
+  ENEP %>% select(country_year, ENEP),
+  gallagher %>% select(country_year, gallagher),
+  gdp %>% select(country_year, gdp),
+  infla_filtered %>% select(country_year, inflation),
+  turnout_idea %>% select(country_year, turnout_nat, mand), 
+  aff_pola %>% select(country_year, PAP_partisans, PAP_electorate, LAP_partisans, LAP_electorate)
+)
+
+# Merge all datasets, ensuring only country-year is retained for joining
+final_data <- reduce(country_data_list, full_join, by = "country_year")
+
+# Merge with individual-level data (DV_long)
+final_data <- left_join(DV_long, final_data, by = "country_year")
+
+# Remove redundant columns: country and year duplicates
+final_data <- final_data %>%
+  select(-matches("^country(\\.x|\\.y|\\.x\\.x|\\.y\\.y|\\.x\\.x\\.x|\\.y\\.y\\.y)+$"),
+         -matches("^year(\\.x|\\.y|\\.x\\.x|\\.y\\.y|\\.x\\.x\\.x|\\.y\\.y\\.y)+$"))
+
+# Check names
+names(final_data)
+
+```
+
+```{r}
+# Remove ptv data
+final_data <- final_data %>%
+  select(-starts_with("t_var_ptv"))
 
 ```
 
@@ -244,8 +235,7 @@ final_turnout <- merge(final_turnout, infla[, c("country_year", "infla")], by = 
 # Output
 
 ```{r}
-saveRDS(final, here("Input", "final_data", "final.rds"))
-saveRDS(final_turnout, here("Input", "final_data", "final_turnout.rds"))
+saveRDS(final_data, here("Input", "final_data", "final.rds"))
 ```
 
 

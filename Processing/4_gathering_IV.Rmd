@@ -6,6 +6,8 @@ output: html_document
 ---
 
 ```{r}
+#devtools::install_github("vdeminstitute/vdemdata")
+
 library("pacman")
 p_load(tidyverse, here, haven, countrycode, vdemdata, psych, lavaan, ltm,
        janitor, conflicted, openxlsx)

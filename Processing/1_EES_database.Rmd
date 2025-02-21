@@ -60,9 +60,89 @@ d_2019 = read_dta(here("Input", "data", "2019.dta")) %>%
 #Extra operations on cumulated data 1989-2004
 #select country, year, ptvs
 d_1989_2004 = d_1989_2004 %>% 
-  select(t_ees, t_cntry, t_var001, t_var_ptv_party1: t_var_ptv_party58) 
+  select(t_ees, t_cntry, t_var001,
+         t_var111, #vote
+         t_var112, #vote_choice
+         t_var134, #lr
+         t_var154, #pol int
+         t_var211, #partisan
+         t_var212, # party id
+         t_var217, #gender
+         t_var218, #year of birth
+         t_var225, # social class
+         t_var_ptv_party1: t_var_ptv_party58) 
 
-#Missing cases as NA
+# t_var111
+d_1989_2004 <- d_1989_2004 %>%
+  mutate(
+    t_var111 = ifelse(t_var111 == 1, 1, 0) # All values except 1 are recoded as 0
+  ) %>%
+  rename(vote = t_var111)
+
+# t_var112
+d_1989_2004 <- d_1989_2004 %>%
+  mutate(t_var112 = ifelse(t_var112 < 100, 0, t_var112)) %>%
+  rename(vote_choice = t_var112) 
+
+# t_var134
+d_1989_2004 <- d_1989_2004 %>%
+  mutate(
+    t_var134 = ifelse(t_var134 > 10, NA, t_var134) # Recode values greater than 10 as NA
+  ) %>%
+  rename(lr = t_var134)
+
+# t_var154
+d_1989_2004 <- d_1989_2004 %>%
+  mutate(
+    t_var154 = ifelse(t_var154 > 7, NA, t_var154), # Recode values greater than 8 as NA
+    t_var154 = case_when( # Invert polarity
+      t_var154 == 1 ~ 4,
+      t_var154 == 2 ~ 3,
+      t_var154 == 3 ~ 2,
+      t_var154 == 4 ~ 1,
+      TRUE ~ t_var154 
+    )
+  ) %>%
+  rename(pol_int = t_var154) # Rename column
+
+#t_var211 #close to a party?
+d_1989_2004 <- d_1989_2004 %>%
+  mutate(t_var211 = ifelse(t_var211 < 10000, 0, 1)) %>%
+  rename(partisan = t_var211) 
+
+# t_var212 # how close?
+d_1989_2004 <- d_1989_2004 %>%
+  mutate(
+    t_var212 = ifelse(t_var212 > 4, 0, t_var212), # Recode values greater than 4 as 0
+    t_var212 = case_when( # Invert polarity
+      t_var212 == 1 ~ 4,
+      t_var212 == 2 ~ 3,
+      t_var212 == 3 ~ 2,
+      t_var212 == 4 ~ 1,
+      TRUE ~ t_var212 # Keep NA values unchanged
+    )
+  ) %>%
+  rename(part_id = t_var212) # Rename column
+
+
+# t_var217
+d_1989_2004 <- d_1989_2004 %>%
+  mutate(
+    t_var217 = ifelse(t_var217 > 2, NA, t_var217)) %>%
+  rename(sex = t_var217)
+
+# t_var218
+d_1989_2004 <- d_1989_2004 %>%
+  rename(yb = t_var218) %>%
+  mutate(yb = ifelse(yb == 0 | yb > 1986, NA, yb)) 
+
+# t_var225
+d_1989_2004 <- d_1989_2004 %>%
+  mutate(
+    t_var225 = ifelse(t_var225 > 5, NA, t_var225)) %>%
+  rename(class = t_var225)
+
+# ptvs
 d_1989_2004 = d_1989_2004 %>%
   mutate(across(t_var_ptv_party1:t_var_ptv_party58, ~case_when(
     . == 99 ~ NA_real_,
@@ -105,7 +185,7 @@ map(list_1989, vis_miss)
 
 #split belgium
 list_1989[["29"]] = list_1989[["2"]] %>% 
-  select(c(t_var_ptv_party8, t_var_ptv_party11, t_var_ptv_party15, t_var_ptv_party20, t_var_ptv_party25, t_var_ptv_party32))
+  select(c(vote:class, t_var_ptv_party8, t_var_ptv_party11, t_var_ptv_party15, t_var_ptv_party20, t_var_ptv_party25, t_var_ptv_party32))
 
 list_1989[["2"]] = list_1989[["2"]] %>% 
   select(-c(t_var_ptv_party8, t_var_ptv_party11, t_var_ptv_party15, t_var_ptv_party20, t_var_ptv_party25, t_var_ptv_party32))
@@ -139,7 +219,7 @@ map(list_1994, vis_miss)
 
 #split belgium
 list_1994[["29"]] = list_1994[["2"]] %>% 
-  select(c(t_var_ptv_party9, t_var_ptv_party14, t_var_ptv_party19, t_var_ptv_party24, t_var_ptv_party27, t_var_ptv_party28))
+  select(c(vote:class, t_var_ptv_party9, t_var_ptv_party14, t_var_ptv_party19, t_var_ptv_party24, t_var_ptv_party27, t_var_ptv_party28))
 
 list_1994[["2"]] = list_1994[["2"]] %>% 
   select(-c(t_var_ptv_party9, t_var_ptv_party14, t_var_ptv_party19, t_var_ptv_party24, t_var_ptv_party26, t_var_ptv_party27, t_var_ptv_party28))
@@ -176,7 +256,7 @@ map(list_1999, vis_miss)
 
 #split belgium
 list_1999[["29"]] = list_1999[["2"]] %>% 
-  select(c(t_var_ptv_party9, t_var_ptv_party14, t_var_ptv_party19, t_var_ptv_party24, t_var_ptv_party28, t_var_ptv_party29))
+  select(c(vote:class, t_var_ptv_party9, t_var_ptv_party14, t_var_ptv_party19, t_var_ptv_party24, t_var_ptv_party28, t_var_ptv_party29))
 
 list_1999[["2"]] = list_1999[["2"]] %>% 
   select(-c(t_var_ptv_party9, t_var_ptv_party14, t_var_ptv_party19, t_var_ptv_party24, t_var_ptv_party28, t_var_ptv_party29))
@@ -199,14 +279,102 @@ list_1999 = lapply(list_1999, function(x) {as.data.frame(x)})
 SWE_2004 = read_dta(here("Input", "data", "2004.dta")) %>% 
   clean_names() %>% 
   filter(country == 26) %>% 
-  select(v115: v128) %>% 
+  select(v111, v112, v134, v154, v211, v212, v217, v218, v224, v115: v128) %>% 
   mutate(across(v115:v128, ~na_if(.x, 99)))
+
+# v111
+SWE_2004 <- SWE_2004 %>%
+  mutate(
+    v111 = ifelse(v111 == 1, 1, 0) # All values except 1 are recoded as 0
+  ) %>%
+  rename(vote = v111)
+
+# v112
+SWE_2004 <- SWE_2004 %>%
+  mutate(v112 = ifelse(v112 > 8, 0, v112)) %>%
+  rename(vote_choice = v112) 
+
+# v134
+SWE_2004 <- SWE_2004 %>%
+  mutate(
+    v134 = ifelse(v134 > 10, NA, v134) # Recode values greater than 10 as NA
+  ) %>%
+  rename(lr = v134)
+
+# v154
+SWE_2004 <- SWE_2004 %>%
+  mutate(
+    v154 = ifelse(v154 > 7, NA, v154), # Recode values greater than 8 as NA
+    v154 = case_when( # Invert polarity
+      v154 == 1 ~ 4,
+      v154 == 2 ~ 3,
+      v154 == 3 ~ 2,
+      v154 == 4 ~ 1,
+      TRUE ~ v154 
+    )
+  ) %>%
+  rename(pol_int = v154) # Rename column
+
+#v211 #close to a party?
+SWE_2004 <- SWE_2004 %>%
+  mutate(v211 = ifelse(v211 < 10000, 0, 1)) %>%
+  rename(partisan = v211) 
+
+# v212 # how close?
+SWE_2004 <- SWE_2004 %>%
+  mutate(
+    v212 = ifelse(v212 > 4, 0, v212), # Recode values greater than 4 as 0
+    v212 = case_when( # Invert polarity
+      v212 == 1 ~ 4,
+      v212 == 2 ~ 3,
+      v212 == 3 ~ 2,
+      v212 == 4 ~ 1,
+      TRUE ~ v212 # Keep NA values unchanged
+    )
+  ) %>%
+  rename(part_id = v212) # Rename column
+
+
+# v217
+SWE_2004 <- SWE_2004 %>%
+  mutate(
+    v217 = ifelse(v217 > 2, NA, v217)) %>%
+  rename(sex = v217)
+
+# v218
+SWE_2004 <- SWE_2004 %>%
+  rename(yb = v218) %>%
+  mutate(yb = ifelse(yb == 0 | yb > 1986, NA, yb)) 
+
+# v224
+SWE_2004 <- SWE_2004 %>%
+  mutate(
+    v225 = ifelse(v224 > 5, NA, v224)) %>%
+  rename(class = v224)
+
+# ptvs
+SWE_2004 = SWE_2004 %>%
+  mutate(across(v115:v128, ~case_when(
+    . == 99 ~ NA_real_,
+    . == 98 ~ NA_real_,
+    . == 97 ~ NA_real_,
+    . == 12 ~ NA_real_,
+    . == -1 ~ NA_real_,
+    TRUE ~ .
+  )))
 
 # remove columns with only NA values, than NA.omit
 SWE_2004 = SWE_2004 %>%
   select(where(~ !all(is.na(.)))) %>% 
   na.omit()
 
+# rename ptv cols
+SWE_2004 <- SWE_2004 %>%
+  rename_with(~ paste0("t_var_ptv_party", seq_along(.)), .cols = v115:v122)
+```
+
+
+```{r}
 # Now back again on the trend file with the same procedure as before
 
 #split the dataframe into a list of dataframes based on unique values of t_cntry
@@ -251,12 +419,98 @@ list_2004 = lapply(list_2004, function(x) {as.data.frame(x)})
 #here there is a V for splitting Belgium: t103
 #select ptvs and country, NAs, recode
 d_2009 = d_2009 %>%
-  select(t103, q39_p1:q39_p15) %>%
+  select(t103, q24, q25, q46, q78, q87, q88, q102, q103, q114, q39_p1:q39_p15) %>%
   mutate(across(q39_p1:q39_p15, ~case_when(
     . > 10 ~ NA_real_,
     TRUE ~ .
-  ))) 
+  )))
 
+# q24
+d_2009 <- d_2009 %>%
+  mutate(
+    q24 = ifelse(q24 == 1, 1, 0) # All values except 1 are recoded as 0
+  ) %>%
+  rename(vote = q24)
+
+# q25
+d_2009 <- d_2009 %>%
+  mutate(q25 = ifelse(q25 < 100, 0, q25)) %>%
+  rename(vote_choice = q25) 
+
+# q46
+d_2009 <- d_2009 %>%
+  mutate(
+    q46 = ifelse(q46 > 10, NA, q46) # Recode values greater than 10 as NA
+  ) %>%
+  rename(lr = q46)
+
+# q78
+d_2009 <- d_2009 %>%
+  mutate(
+    q78 = ifelse(q78 > 6, NA, q78), # Recode values greater than 8 as NA
+    q78 = case_when( # Invert polarity
+      q78 == 1 ~ 4,
+      q78 == 2 ~ 3,
+      q78 == 3 ~ 2,
+      q78 == 4 ~ 1,
+      TRUE ~ q78 
+    )
+  ) %>%
+  rename(pol_int = q78) # Rename column
+
+#q87 #close to a party?
+d_2009 <- d_2009 %>%
+  mutate(q87 = ifelse(q87 < 10000, 0, 1)) %>%
+  rename(partisan = q87) 
+
+# q88 # how close?
+d_2009 <- d_2009 %>%
+  mutate(
+    q88 = ifelse(q88 > 4, 0, q88), # Recode values greater than 4 as 0
+    q88 = case_when( # Invert polarity
+      q88 == 1 ~ 4,
+      q88 == 2 ~ 3,
+      q88 == 3 ~ 2,
+      q88 == 4 ~ 1,
+      TRUE ~ q88 # Keep NA values unchanged
+    )
+  ) %>%
+  rename(part_id = q88) # Rename column
+
+
+# q102
+d_2009 <- d_2009 %>%
+  mutate(
+    q102 = ifelse(q102 > 2, NA, q102)) %>%
+  rename(sex = q102)
+
+# q103
+d_2009 <- d_2009 %>%
+  rename(yb = q103) %>%
+  mutate(yb = ifelse(yb == 0 | yb > 1986, NA, yb)) 
+
+# q114
+d_2009 <- d_2009 %>%
+  mutate(
+    q114 = ifelse(q114 > 5, NA, q114)) %>%
+  rename(class = q114)
+
+# ptvs
+d_2009 <- d_2009 %>%
+  mutate(across(q39_p1:q39_p15, ~case_when(
+    . == 99 ~ NA_real_,
+    . == 98 ~ NA_real_,
+    . == 97 ~ NA_real_,
+    . == 12 ~ NA_real_,
+    . == -1 ~ NA_real_,
+    TRUE ~ .
+  ))) %>%
+  rename_with(~ paste0("t_var_ptv_party", seq_along(.)), .cols = q39_p1:q39_p15)
+
+```
+
+
+```{r}
 #country list
 list_2009 = split(d_2009, d_2009$t103)
 
@@ -283,12 +537,99 @@ list_2009 = lapply(list_2009, function(df) {
 ```{r}
 #select ptvs and country, NAs, recode
 d_2014 = d_2014 %>%
-  select(countrycode, p13_intlang, qpp8_1:qpp8_8) %>%
+  select(countrycode, p13_intlang, 
+         qp1, qp2, qpp13, qp6_9, qpp21, qpp22, d10, vd11, d63,
+         qpp8_1:qpp8_8) %>%
   mutate(across(qpp8_1:qpp8_8, ~case_when(
     . <= 0 ~ NA_real_,
     TRUE ~ .
-  ))) 
+  )))
 
+# qp1
+d_2014 <- d_2014 %>%
+  mutate(
+    qp1 = ifelse(qp1 == 1, 1, 0) # All values except 1 are recoded as 0
+  ) %>%
+  rename(vote = qp1)
+
+# qp2
+d_2014 <- d_2014 %>%
+  mutate(qp2 = ifelse(qp2 < 1, 0, qp2)) %>%
+  rename(vote_choice = qp2) 
+
+# qpp13
+d_2014 <- d_2014 %>%
+  mutate(
+    qpp13 = ifelse(qpp13 < 1, NA, qpp13) # Recode values greater than 10 as NA
+  ) %>%
+  rename(lr = qpp13)
+
+# qp6_9
+d_2014 <- d_2014 %>%
+  mutate(
+    qp6_9 = ifelse(qp6_9 < 1, NA, qp6_9), # Recode values greater than 8 as NA
+    qp6_9 = case_when( # Invert polarity
+      qp6_9 == 1 ~ 4,
+      qp6_9 == 2 ~ 3,
+      qp6_9 == 3 ~ 2,
+      qp6_9 == 4 ~ 1,
+      TRUE ~ qp6_9 
+    )
+  ) %>%
+  rename(pol_int = qp6_9) # Rename column
+
+#qpp21 #close to a party?
+d_2014 <- d_2014 %>%
+  mutate(qpp21 = ifelse(qpp21 < 2, 0, 1)) %>%
+  rename(partisan = qpp21) 
+
+# qpp22 # how close?
+d_2014 <- d_2014 %>%
+  mutate(
+    qpp22 = ifelse(qpp22 < 1, 0, qpp22), # Recode values greater than 4 as 0
+    qpp22 = case_when( # Invert polarity
+      qpp22 == 1 ~ 4,
+      qpp22 == 2 ~ 3,
+      qpp22 == 3 ~ 2,
+      qpp22 == 4 ~ 1,
+      TRUE ~ qpp22 # Keep NA values unchanged
+    )
+  ) %>%
+  rename(part_id = qpp22) # Rename column
+
+
+# d10
+d_2014 <- d_2014 %>%
+  mutate(
+    d10 = ifelse(d10 > 2, NA, d10)) %>%
+  rename(sex = d10)
+
+#vd11
+d_2014 <- d_2014 %>%
+  rename(yb = vd11) %>%
+  mutate(yb = 2014 - yb) # Convert age to year of birth
+
+# d63
+d_2014 <- d_2014 %>%
+  mutate(
+    d63 = ifelse(d63 < 1, NA, d63)) %>%
+  rename(class = d63)
+
+# ptvs
+d_2014 = d_2014 %>%
+  mutate(across(qpp8_1:qpp8_8, ~case_when(
+    . == -99 ~ NA_real_,
+    . == -9 ~ NA_real_,
+    . == -8 ~ NA_real_,
+    . == -7 ~ NA_real_,
+    TRUE ~ .
+  )))%>%
+  rename_with(~ paste0("t_var_ptv_party", seq_along(.)), .cols = qpp8_1:qpp8_8)
+
+```
+
+
+```{r}
 #country list
 list_2014 = split(d_2014, d_2014$countrycode)
 
@@ -298,7 +639,7 @@ b1 = list_2014[["1056"]] %>%
 
 b2 = list_2014[["1056"]] %>% 
   filter(p13_intlang == 8) %>% 
-  select(-qpp8_7) #always missing, error documented in the release note
+  select(-t_var_ptv_party7) #always missing, error documented in the release note
 
 # Assign belgium
 list_2014[["1056"]] = b1
@@ -328,30 +669,93 @@ list_2014 = lapply(list_2014, function(df) {
 ```{r}
 #select ptvs and country, NAs, recode
 d_2019 = d_2019 %>%
-  select(countrycode, meta_lang_be, q10_1:q10_10) %>%
+  select(countrycode, meta_lang_be, 
+         q6, q7, q11, q21, q25, q26, d3, d4_1, d7, 
+         q10_1:q10_10) 
+
+# q6
+d_2019 <- d_2019 %>%
+  mutate(
+    q6 = ifelse(q6 == 1, 1, 0) # All values except 1 are recoded as 0
+  ) %>%
+  rename(vote = q6)
+
+# q7
+d_2019 <- d_2019 %>%
+  mutate(q7 = ifelse(q7 < 100, 0, q7)) %>%
+  rename(vote_choice = q7) 
+
+# q11
+d_2019 <- d_2019 %>%
+  mutate(
+    q11 = ifelse(q11 > 10, NA, q11) # Recode values greater than 10 as NA
+  ) %>%
+  rename(lr = q11)
+
+# q21
+d_2019 <- d_2019 %>%
+  mutate(
+    q21 = ifelse(q21 > 4, NA, q21), # Recode values greater than 8 as NA
+    q21 = case_when( # Invert polarity
+      q21 == 1 ~ 4,
+      q21 == 2 ~ 3,
+      q21 == 3 ~ 2,
+      q21 == 4 ~ 1,
+      TRUE ~ q21 
+    )
+  ) %>%
+  rename(pol_int = q21) # Rename column
+
+#q25 #close to a party?
+d_2019 <- d_2019 %>%
+  mutate(q25 = ifelse(q25 < 99, 0, 1)) %>%
+  rename(partisan = q25) 
+
+# q26 # how close?
+d_2019 <- d_2019 %>%
+  mutate(
+    q26 = ifelse(q26 > 3, 0, q26), # Recode values greater than 4 as 0
+    q26 = case_when( # Invert polarity
+      q26 == 0 ~ 0,
+      q26 == 1 ~ 3,
+      q26 == 2 ~ 2,
+      q26 == 3 ~ 1,
+      TRUE ~ q26 # Keep NA values unchanged
+    )
+  ) %>%
+  rename(part_id = q26) # Rename column
+
+
+# d3
+d_2019 <- d_2019 %>%
+  mutate(
+    d3 = ifelse(d3 > 2, NA, d3)) %>%
+  rename(sex = d3)
+
+# d4_1
+d_2019 <- d_2019 %>%
+  rename(yb = d4_1) %>%
+  mutate(yb = ifelse(yb > 2001, NA, yb)) 
+
+# d7
+d_2019 <- d_2019 %>%
+  mutate(
+    d7 = ifelse(d7 > 5, NA, d7)) %>%
+  rename(class = d7)
+
+# ptvs
+d_2019 = d_2019 %>%
   mutate(across(q10_1:q10_10, ~case_when(
     . == 99 ~ NA_real_,
     . == 98 ~ NA_real_,
     . == 97 ~ NA_real_,
-    . == 96 ~ NA_real_,
     TRUE ~ .
-  ))) %>%
-  mutate(
-    across(c(q10_8, q10_9), ~case_when(
-      . > 0 & . <= 1 ~ 1,
-      . > 1 & . <= 2 ~ 2,
-      . > 2 & . <= 3 ~ 3,
-      . > 3 & . <= 4 ~ 4,
-      . > 4 & . <= 5 ~ 5,
-      . > 5 & . <= 6 ~ 6,
-      . > 6 & . <= 7 ~ 7,
-      . > 7 & . <= 8 ~ 8,
-      . > 8 & . <= 9 ~ 9,
-      . > 9 & . <= 10 ~ 10,
-      TRUE ~ .  
-    ))
-  )
+  )))%>%
+  rename_with(~ paste0("t_var_ptv_party", seq_along(.)), .cols = q10_1:q10_10)
 
+```
+
+```{r}
 #country list
 list_2019 = split(d_2019, d_2019$countrycode)
 

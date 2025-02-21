@@ -1,0 +1,123 @@
+---
+title: "0_Simulation"
+author: "Arturo Bertero"
+date: "2025-02-17"
+output: html_document
+---
+
+```{r}
+library(pacman)
+p_load(tidyverse, ggplot2, igraph, ggraph)
+```
+
+```{r}
+# Create example data
+ptv_data = tibble(
+  PTV_1 = c(10, 9, 10, 7, 9, 6, 5, 6),
+  PTV_2 = c(2, 1, 6, 7, 7, 6, 5, 6),
+  PTV_3 = c(2, 1, 6, 2, 7, 3, 5, 6),
+  PTV_4 = c(2, 1, 5, 1, 6, 2, 5, 6),
+  PTV_5 = c(2, 1, 5, 1, 6, 1, 5, 6))
+```
+
+```{r}
+# Compute aff measures
+ptv_data <- ptv_data %>%
+  rowwise() %>%
+  mutate(
+    # PTV_Gap: Highest PTV minus second-highest PTV
+    PTV_Gap = max(c(PTV_1, PTV_2, PTV_3, PTV_4, PTV_5)) - sort(c(PTV_1, PTV_2, PTV_3, PTV_4, PTV_5), decreasing = TRUE)[2],
+
+    # Affective Polarization: (Max PTV - Mean of all others) / 10
+    Affective_Polarization = (max(c(PTV_1, PTV_2, PTV_3, PTV_4, PTV_5)) - mean(c(PTV_1, PTV_2, PTV_3, PTV_4, PTV_5)[-which.max(c(PTV_1, PTV_2, PTV_3, PTV_4, PTV_5))])) / 10) %>%
+  ungroup()
+
+```
+
+```{r}
+# Function to compute the absolute difference matrix for each individual
+compute_abs_diff_matrix <- function(ptv_row) {
+  ptv_values <- as.numeric(ptv_row)  # Convert row to numeric vector
+  num_parties <- length(ptv_values)
+  
+  # Generate all pairwise combinations of PTV variables
+  party_labels <- paste0("P", 1:num_parties)
+  pairwise_combinations <- expand.grid(party_labels, party_labels, stringsAsFactors = FALSE)
+  colnames(pairwise_combinations) <- c("Party", "Compared_Party")
+  
+  # Compute absolute differences for each pair
+  pairwise_combinations$Abs_Diff <- abs(ptv_values[match(pairwise_combinations$Party, party_labels)] -
+                                        ptv_values[match(pairwise_combinations$Compared_Party, party_labels)])
+  
+  return(pairwise_combinations)
+}
+
+# Apply function to all rows (individuals)
+ptv_matrices <- ptv_data %>%
+  rowwise() %>%
+  mutate(Matrix = list(compute_abs_diff_matrix(c_across(PTV_1:PTV_5)))) %>%
+  ungroup()
+
+# View structure of computed matrices
+print(ptv_matrices)
+
+
+```
+
+```{r}
+# Compute network pola
+compute_network_polarization <- function(matrix_data) {
+  mean(matrix_data$Abs_Diff[matrix_data$Party != matrix_data$Compared_Party])  # Exclude self-loops
+}
+
+# Apply
+# Apply function to all individuals
+ptv_matrices <- ptv_matrices %>%
+  rowwise() %>%
+  mutate(NAP = compute_network_polarization(Matrix)) %>%
+  ungroup()
+```
+
+
+```{r}
+# Function to create and plot an individual PTV network
+plot_ptv_network <- function(matrix_data, title) {
+  # Create an igraph object from the matrix
+  g <- graph_from_data_frame(matrix_data, directed = FALSE)
+  
+  # Set edge weights
+  E(g)$weight <- matrix_data$Abs_Diff
+  
+  # Plot the network using ggraph
+  ggraph(g, layout = "circle") +
+    geom_edge_link(aes(width = weight), color = "blue", alpha = 0.7) +
+    geom_node_point(size = 5, color = "red") +
+    geom_node_text(aes(label = name), repel = TRUE, size = 5) +
+    scale_edge_width(range = c(0.5, 5)) +  # Scale edge weights
+    theme_void() +
+    labs(title = title)
+}
+
+# Loop through all matrices and plot networks
+for (i in 1:nrow(ptv_matrices)) {
+  print(plot_ptv_network(ptv_matrices$Matrix[[i]], paste("PTV Belief System - Individual", i)))
+}
+```
+
+```{r}
+# Compute Network Affective Polarization (NAP) for each individual
+compute_network_polarization <- function(matrix_data) {
+  mean(matrix_data$Abs_Diff)  # Mean of all edge weights
+}
+
+# Apply function to all individuals
+ptv_matrices <- ptv_matrices %>%
+  rowwise() %>%
+  mutate(NAP = compute_network_polarization(Matrix)) %>%
+  ungroup()
+
+# View results
+print(ptv_matrices %>% select(NAP))
+```
+
+

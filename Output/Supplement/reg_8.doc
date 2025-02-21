@@ -12,107 +12,107 @@
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">(Intercept)</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.13 <sup></sup><br>(&#45;0.15&nbsp;&ndash;&nbsp;0.42)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.11 <sup></sup><br>(&#45;0.14&nbsp;&ndash;&nbsp;0.36)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.14 <sup></sup><br>(&#45;0.19&nbsp;&ndash;&nbsp;0.47)</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">PAP electorate</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.21 <sup>***</sup><br>(0.07&nbsp;&ndash;&nbsp;0.36)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.20 <sup>***</sup><br>(0.07&nbsp;&ndash;&nbsp;0.32)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.19 <sup>**</sup><br>(0.01&nbsp;&ndash;&nbsp;0.36)</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">country [DNK]</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.01 <sup></sup><br>(-0.10&nbsp;&ndash;&nbsp;0.09)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.01 <sup></sup><br>(-0.09&nbsp;&ndash;&nbsp;0.07)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.02 <sup></sup><br>(-0.13&nbsp;&ndash;&nbsp;0.09)</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">country [ESP]</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.05 <sup></sup><br>(&#45;0.16&nbsp;&ndash;&nbsp;0.27)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.05 <sup></sup><br>(&#45;0.14&nbsp;&ndash;&nbsp;0.23)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.07 <sup></sup><br>(-0.32&nbsp;&ndash;&nbsp;0.19)</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">country [FIN]</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.01 <sup></sup><br>(-0.11&nbsp;&ndash;&nbsp;0.08)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.02 <sup></sup><br>(-0.10&nbsp;&ndash;&nbsp;0.07)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.09 <sup></sup><br>(-0.20&nbsp;&ndash;&nbsp;0.03)</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">country [FRA]</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.10 <sup></sup><br>(-0.31&nbsp;&ndash;&nbsp;0.11)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.10 <sup></sup><br>(-0.29&nbsp;&ndash;&nbsp;0.08)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.06 <sup></sup><br>(-0.31&nbsp;&ndash;&nbsp;0.19)</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">country [GBR]</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.12 <sup></sup><br>(-0.32&nbsp;&ndash;&nbsp;0.08)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.09 <sup></sup><br>(-0.27&nbsp;&ndash;&nbsp;0.08)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.10 <sup></sup><br>(-0.33&nbsp;&ndash;&nbsp;0.14)</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">country [GRC]</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.09 <sup></sup><br>(-0.26&nbsp;&ndash;&nbsp;0.09)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.07 <sup></sup><br>(-0.22&nbsp;&ndash;&nbsp;0.08)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.11 <sup></sup><br>(-0.32&nbsp;&ndash;&nbsp;0.09)</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">country [NLD]</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.02 <sup></sup><br>(&#45;0.09&nbsp;&ndash;&nbsp;0.12)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.01 <sup></sup><br>(&#45;0.08&nbsp;&ndash;&nbsp;0.11)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.05 <sup></sup><br>(-0.17&nbsp;&ndash;&nbsp;0.07)</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">country [PRT]</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.07 <sup></sup><br>(-0.31&nbsp;&ndash;&nbsp;0.16)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.06 <sup></sup><br>(-0.27&nbsp;&ndash;&nbsp;0.15)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.10 <sup></sup><br>(-0.37&nbsp;&ndash;&nbsp;0.18)</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">country [SWE]</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.06 <sup></sup><br>(&#45;0.05&nbsp;&ndash;&nbsp;0.16)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.05 <sup></sup><br>(&#45;0.04&nbsp;&ndash;&nbsp;0.14)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.06 <sup></sup><br>(&#45;0.06&nbsp;&ndash;&nbsp;0.18)</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">year [1994]</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.08 <sup></sup><br>(-0.23&nbsp;&ndash;&nbsp;0.07)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.08 <sup></sup><br>(-0.21&nbsp;&ndash;&nbsp;0.05)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.05 <sup></sup><br>(-0.23&nbsp;&ndash;&nbsp;0.12)</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">year [1999]</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.15 <sup></sup><br>(-0.33&nbsp;&ndash;&nbsp;0.04)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.14 <sup>*</sup><br>(-0.30&nbsp;&ndash;&nbsp;0.02)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.10 <sup></sup><br>(-0.31&nbsp;&ndash;&nbsp;0.12)</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">year [2004]</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.12 <sup></sup><br>(-0.37&nbsp;&ndash;&nbsp;0.12)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.13 <sup></sup><br>(-0.34&nbsp;&ndash;&nbsp;0.09)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.03 <sup></sup><br>(-0.31&nbsp;&ndash;&nbsp;0.25)</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">year [2009]</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.11 <sup></sup><br>(-0.37&nbsp;&ndash;&nbsp;0.14)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.12 <sup></sup><br>(-0.34&nbsp;&ndash;&nbsp;0.11)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.04 <sup></sup><br>(-0.34&nbsp;&ndash;&nbsp;0.26)</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">year [2014]</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.12 <sup></sup><br>(-0.43&nbsp;&ndash;&nbsp;0.19)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.12 <sup></sup><br>(-0.39&nbsp;&ndash;&nbsp;0.15)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.08 <sup></sup><br>(-0.45&nbsp;&ndash;&nbsp;0.28)</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">year [2019]</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.10 <sup></sup><br>(-0.43&nbsp;&ndash;&nbsp;0.23)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.12 <sup></sup><br>(-0.41&nbsp;&ndash;&nbsp;0.17)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.07 <sup></sup><br>(-0.46&nbsp;&ndash;&nbsp;0.32)</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">ENEP</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.34 <sup>*</sup><br>(-0.69&nbsp;&ndash;&nbsp;0.02)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.24 <sup></sup><br>(-0.55&nbsp;&ndash;&nbsp;0.07)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.23 <sup></sup><br>(-0.64&nbsp;&ndash;&nbsp;0.18)</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">gallagher</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.08 <sup></sup><br>(&#45;0.25&nbsp;&ndash;&nbsp;0.41)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.08 <sup></sup><br>(&#45;0.21&nbsp;&ndash;&nbsp;0.37)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">&#45;0.07 <sup></sup><br>(-0.46&nbsp;&ndash;&nbsp;0.31)</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">ihdi</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.04 <sup></sup><br>(&#45;0.59&nbsp;&ndash;&nbsp;0.66)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.03 <sup></sup><br>(&#45;0.52&nbsp;&ndash;&nbsp;0.58)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.00 <sup></sup><br>(&#45;0.73&nbsp;&ndash;&nbsp;0.74)</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">pint</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.09 <sup></sup><br>(&#45;0.09&nbsp;&ndash;&nbsp;0.27)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.08 <sup></sup><br>(&#45;0.08&nbsp;&ndash;&nbsp;0.24)</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.10 <sup></sup><br>(&#45;0.11&nbsp;&ndash;&nbsp;0.31)</td>
 </tr>
 <tr>
@@ -122,12 +122,12 @@
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">R<sup>2</sup> / R<sup>2</sup> adjusted</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1">0.697 / 0.465</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1">0.711 / 0.489</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1">0.705 / 0.478</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">AIC</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1">-126.699</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1">-139.160</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1">-111.534</td>
 </tr>
 <tr>
