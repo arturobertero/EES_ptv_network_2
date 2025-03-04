@@ -749,6 +749,7 @@ d_2019 = d_2019 %>%
     . == 99 ~ NA_real_,
     . == 98 ~ NA_real_,
     . == 97 ~ NA_real_,
+    . == 96 ~ NA_real_,
     TRUE ~ .
   )))%>%
   rename_with(~ paste0("t_var_ptv_party", seq_along(.)), .cols = q10_1:q10_10)

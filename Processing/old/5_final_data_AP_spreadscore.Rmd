@@ -311,11 +311,11 @@ data <- data %>%
 # AP = spread of party preferences: average absolute party score relative to average party score
 
 
-# Function to compute PTV_Gap and AP
-compute_ptv_measures <- function(ptv_row) {
-  # Extract valid PTV scores (0-10)
-  ptv_scores <- as.numeric(ptv_row[grepl("^t_var_ptv_party\\d+$", names(ptv_row))])
-  ptv_scores <- ptv_scores[!is.na(ptv_scores) & ptv_scores >= 0 & ptv_scores <= 10]  
+# Function to compute PTV_Gap and AP at the individual level
+compute_ptv_measures <- function(row) {
+  # Extract valid PTV 
+  ptv_scores <- row[grepl("^t_var_ptv_party\\d+$", names(row))] %>% as.numeric()
+  ptv_scores <- ptv_scores[!is.na(ptv_scores) & ptv_scores >= 0 & ptv_scores <= 10]  # Keep only valid PTVs (0-10)
 
   # Compute PTV_Gap (Max - Second Max)
   if (length(ptv_scores) >= 2) {
@@ -325,11 +325,10 @@ compute_ptv_measures <- function(ptv_row) {
     ptv_gap <- NA 
   }
   
-  # Compute Affective Polarization (AP) - Wagner's Mean-Distance Formula
+  # Compute Affective Polarization (AP) - Spread of PTVs
   if (length(ptv_scores) >= 2) {
-    like_max <- max(ptv_scores, na.rm = TRUE)  # Identify most liked party score
-    n_p <- length(ptv_scores) - 1  # Number of other parties
-    ap <- sqrt(sum((ptv_scores - like_max)^2) / n_p)  # Wagner's formula
+    mean_ptv <- mean(ptv_scores, na.rm = TRUE)
+    ap <- sqrt(sum((ptv_scores - mean_ptv)^2) / length(ptv_scores))  # Standard deviation formula
   } else {
     ap <- NA  
   }
@@ -337,18 +336,19 @@ compute_ptv_measures <- function(ptv_row) {
   return(c(ptv_gap, ap))
 }
 
-# Apply function to dataset
+# Apply function
 data <- data %>%
+  rowwise() %>%
   mutate(
-    PTV_Gap = map_dbl(split(., seq(nrow(.))), ~ compute_ptv_measures(.x)[1]),
-    AP = map_dbl(split(., seq(nrow(.))), ~ compute_ptv_measures(.x)[2])
-  )
+    PTV_Gap = compute_ptv_measures(cur_data())[1],
+    AP = compute_ptv_measures(cur_data())[2]
+  ) %>%
+  ungroup()
 
-# Ensure numeric format
+# numeric
 data <- data %>%
   mutate(PTV_Gap = as.numeric(PTV_Gap),
          AP = as.numeric(AP))
-
 
 # Check summary statistics
 summary(data$PTV_Gap)
@@ -367,16 +367,6 @@ data <- data %>%
          AP_Centered = AP - mean(AP, na.rm = TRUE)) %>%
   ungroup()
 ```
-
-```{r}
-# Compute n_PTV: count valid PTVs per individual
-data <- data %>%
-  rowwise() %>%
-  mutate(n_PTV = sum(!is.na(c_across(starts_with("t_var_ptv"))))) %>%
-  ungroup()
-
-```
-
 
 # Output
 

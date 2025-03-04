@@ -43,31 +43,32 @@ print(total_rows_wide)
 ## Individual level networks
 
 ```{r}
-# Function to compute absolute difference matrix 
+# Function to compute conceptual distance matrix for an individual's PTV scores
 compute_difference_matrix <- function(ptv_row) {
-  ptv_values <- as.numeric(ptv_row)  
+  ptv_values <- as.numeric(ptv_row) 
   party_labels <- names(ptv_row)  
   
-  # Ensure at least two valid PTV values exist
-  if (sum(!is.na(ptv_values)) < 2) {
+  # Ensure that we have valid party labels
+  if (length(ptv_values) < 2) {
     return(NULL)  
   }
   
-  # Generate all pairwise combinations of PTV variables
-  pairwise_combinations <- expand.grid(Party = party_labels, Compared_Party = party_labels, stringsAsFactors = FALSE) %>%
-    filter(Party != Compared_Party) %>%  # Exclude self-comparisons
-    mutate(Difference = abs(ptv_values[match(Party, party_labels)] - 
-                            ptv_values[match(Compared_Party, party_labels)]))
+  # Generate all pairwise combinations of parties
+  pairwise_combinations <- expand.grid(Party = party_labels, Compared_Party = party_labels, stringsAsFactors = FALSE)
+  
+  # Compute absolute differences 
+  pairwise_combinations$Difference <- abs(ptv_values[match(pairwise_combinations$Party, party_labels)] -
+                                          ptv_values[match(pairwise_combinations$Compared_Party, party_labels)])
   
   return(pairwise_combinations)
 }
 
-# Function to generate difference matrices for each country-year dataset
+# Function to generate difference matrices for each country-year 
 generate_difference_matrices <- function(country_data) {
   country_data %>%
-    select(starts_with("t_var_ptv")) %>%  # Ensure only PTV variables are selected
+    select(starts_with("t_var_ptv")) %>%  
     rowwise() %>%
-    mutate(Difference_Matrix = list(compute_difference_matrix(cur_data()))) %>%
+    mutate(Difference_Matrix = list(compute_difference_matrix(cur_data()))) %>%  
     ungroup() %>%
     select(Difference_Matrix)  # Keep only the difference matrix column
 }
@@ -77,9 +78,11 @@ EES_mat <- map(EES, function(year_data) {
   map(year_data, generate_difference_matrices)
 })
 
+## Mean Constraint Computation
+
 # Function to compute mean constraint (average absolute difference score) for an individual
 compute_mean_constraint <- function(difference_matrix) {
-  if (!is.null(difference_matrix) && nrow(difference_matrix) > 0) {
+  if (!is.null(difference_matrix)) {
     return(mean(difference_matrix$Difference, na.rm = TRUE)) 
   } else {
     return(NA_real_)  
@@ -92,14 +95,12 @@ add_mean_constraint <- function(country_data, country_name, year) {
     mutate(Mean_Constraint = map_dbl(EES_mat[[year]][[country_name]][["Difference_Matrix"]], compute_mean_constraint))
 }
 
-# Apply function across all year-country datasets 
+# Apply function 
 EES <- map(names(EES), function(year) {
   map(names(EES[[year]]), function(country_name) {
     add_mean_constraint(EES[[year]][[country_name]], country_name, year)
   }) %>% set_names(names(EES[[year]])) # Preserve country names
 }) %>% set_names(names(EES)) # Preserve year names
-
-
 
 
 ```
