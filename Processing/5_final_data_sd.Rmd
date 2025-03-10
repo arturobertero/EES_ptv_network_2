@@ -358,16 +358,6 @@ summary(data$Mean_Constraint)
 ```
 
 ```{r}
-# Center Important variables
-data <- data %>%
-  group_by(country_year) %>%
-  mutate(Mean_Constraint_Centered = Mean_Constraint - mean(Mean_Constraint, na.rm = TRUE),
-         PTV_Gap_Centered = PTV_Gap - mean(PTV_Gap, na.rm = TRUE),
-         AP_Centered = AP - mean(AP, na.rm = TRUE)) %>%
-  ungroup()
-```
-
-```{r}
 # Compute n_PTV: count valid PTVs per individual
 data <- data %>%
   rowwise() %>%
@@ -376,6 +366,26 @@ data <- data %>%
 
 ```
 
+```{r}
+# Compute PTV_SD (Standard Deviation of PTV Scores) and PTV_M (Mean of PTV Scores)
+data <- data %>%
+  rowwise() %>%
+  mutate(
+    PTV_SD = ifelse(n_PTV > 1, sd(c_across(starts_with("t_var_ptv")), na.rm = TRUE), NA_real_),
+    PTV_M  = ifelse(n_PTV > 0, mean(c_across(starts_with("t_var_ptv")), na.rm = TRUE), NA_real_)
+  ) %>%
+  ungroup()
+
+# Ensure numeric format
+data <- data %>%
+  mutate(PTV_SD = as.numeric(PTV_SD),
+         PTV_M  = as.numeric(PTV_M))
+
+# Check summary statistics 
+summary(data$PTV_SD)
+summary(data$PTV_M)
+
+```
 
 # Output
 

@@ -15,28 +15,12 @@ knitr::opts_chunk$set(echo = TRUE, error = FALSE, message = FALSE, warning = FAL
 ```{r}
 library("pacman")
 p_load(tidyverse, here, haven, countrycode, vdemdata, psych, lavaan, ltm, patchwork,
-       kableExtra, lme4, lmerTest, conflicted, stringr, sjPlot, car)
+       kableExtra, lme4, lmerTest, conflicted, stringr, sjPlot, car, ggplot2)
 
 #conflicts
 conflict_prefer("select", "dplyr")
 conflict_prefer("filter", "dplyr")
 ```
-
-# Introduction
-
-In this report I fit the main models. We will try to understand two points. 
-
-1. Does higher mean constraint predicts higher liklyhood of turnout?
-2. Is mean constraint a better predictor of turnout, compared to other measures we can compute on PTV?
-
-Point 1 is straightforward: this is our core rq. Point 2 reposnds to the point u oulined in the last email. 
-We need to know if constraint improves our prediction of turnout, compared to what we can predict by using 
-raw PTV data. Yet, there was a problem with your suggestion. Each voter in EES ranked all the parties 
-present in his/her country/year. Yet, this number varies across party/year. I did not know how to account for this
-in a multilevel model: we can fit a single model, as covariates would vary for every country/year. 
-
-So I simply compare if mean constraint (versus AP and PTV_GAP) is a better predictor of turnout. This is kind
-of a proxy of your original question, but can be answered with a multilevel model. 
 
 # Input
 
@@ -49,21 +33,52 @@ data = read_rds(here("Input", "final_data", "final.rds"))
 
 # Processing
 
-Correlation between the three measures. Correlations are strong, especially between
-AP and PTV gap. But also AP and Mean constraint correlate above .5. Is this a problem?
-I think this is kind of necessary, given the conceptual similarity between the measures.
+Correlation between the measures, before rescaling and centering. Variables are:
+
+**Mean_Constraint**: mean of absolute differences between PTV scores
+**PTV_GAP**: max - second max PTV score
+**AP**: spread of PTV scores, formula is [here](https://www.sciencedirect.com/science/article/abs/pii/S0261379420300822?via%3Dihub) 
+**DIFF_SD**: SD of absolute differences of PTV scores
+**PTV_SD**: SD of raw PTV scores
+**PTV_M**: mean of PTV scores
 
 ```{r}
 # Check cors
 
 # Standard Pearson Correlations (ignores multilevel structure)
 cor_matrix <- data %>%
-  select(Mean_Constraint, PTV_Gap, AP) %>%
+  select(Mean_Constraint, PTV_Gap, AP, DIFF_SD, PTV_SD, PTV_M) %>%
   cor(use = "pairwise.complete.obs")
+
 print(cor_matrix)
 ```
+Mean constraint is virtually the same variable as the SD of PTV scores. 
+PTV_Gap is mainly similar to AP, but differ a lot with respect to Constraint. 
+AP is basically the SD of raw PTV scores (PTV_SD) or the SD of the absolute differences between PTV scores.
 
-Now a final check on variables' types and distributions. 
+Now some basic plot of the mean of these variables at the country-year level:
+
+```{r}
+# Aggregate data at the country-year level (taking the mean per country_year)
+data_agg <- data %>%
+  group_by(country_year) %>%
+  summarize(across(c(Mean_Constraint, PTV_Gap, AP, DIFF_SD, PTV_SD, PTV_M), mean, na.rm = TRUE)) %>%
+  pivot_longer(cols = -country_year, names_to = "Variable", values_to = "Value")
+
+# Create histograms of country-year aggregated data
+p <- ggplot(data_agg, aes(x = Value)) +
+  geom_histogram(fill = "gray30", color = "black", bins = 30) +
+  facet_wrap(~Variable, scales = "free") +
+  theme_minimal() +
+  labs(title = "Distributions of Key Variables (Aggregated at Country-Year Level)",
+       x = "Mean Value per Country-Year", 
+       y = "Count")
+
+# Print the plot
+print(p)
+
+```
+
 
 ```{r}
 # Check variable types
@@ -80,212 +95,358 @@ table(data$partisan, useNA = "always")
 
 ```
 
-## Model
-
-I have centered all three PTV measures as you suggested. This was done at the end of 
-the file "5_final_data", with the code: 
-
 ```{r}
-# # Center Important variables
-# data <- data %>%
-#   group_by(country_year) %>%
-#   mutate(Mean_Constraint_Centered = Mean_Constraint - mean(Mean_Constraint, na.rm = TRUE),
-#          PTV_Gap_Centered = PTV_Gap - mean(PTV_Gap, na.rm = TRUE),
-#          AP_Centered = AP - mean(AP, na.rm = TRUE)) %>%
-#   ungroup()
+# Function to rescale and center numeric variables within country_year
+rescale_and_center <- function(data, var_name) {
+  
+  if (var_name %in% names(data) && is.numeric(data[[var_name]])) {
+    
+    # Rescale to 0-1
+    data <- data %>%
+      mutate(!!sym(var_name) := (get(var_name) - min(get(var_name), na.rm = TRUE)) / 
+                                 (max(get(var_name), na.rm = TRUE) - min(get(var_name), na.rm = TRUE)))
+    
+    # Center within country_year
+    data <- data %>%
+      group_by(country_year) %>%
+      mutate(!!sym(paste0(var_name, "_centered")) := get(var_name) - mean(get(var_name), na.rm = TRUE)) %>%
+      ungroup()
+    
+  } else {
+    message(paste("Skipping:", var_name, "- Not a numeric variable"))
+  }
+  
+  return(data)
+}
+
 ```
 
-Furthermore, in that file I have also created a variable counting the number of PTV items 
-in each country_year, with the code: 
-
 ```{r}
-# # Compute n_PTV: count valid PTVs per individual
-# data <- data %>%
-#   rowwise() %>%
-#   mutate(n_PTV = sum(!is.na(c_across(starts_with("t_var_ptv"))))) %>%
-#   ungroup()
+#Apply the function to all key PTV measures
+
+data = rescale_and_center(data, "Mean_Constraint")
+data = rescale_and_center(data, "PTV_Gap")
+data = rescale_and_center(data, "AP")
+data = rescale_and_center(data, "DIFF_SD")
+data = rescale_and_center(data, "PTV_SD")
+data = rescale_and_center(data, "PTV_M")
+
+# Apply to individual level numeric controls
+data = rescale_and_center(data, "pol_int")
+data = rescale_and_center(data, "yb")
+data = rescale_and_center(data, "class")
+
+# Apply to country-level numeric controls
+data = rescale_and_center(data, "ENEP")
+data = rescale_and_center(data, "inflation")
 ```
 
-Here we have what can be a problem: this measure has 2 values in Belgium, where individuals rate different parties based on their language. Look: 
 
-```{r}
-# Cross tab country_year and n_ptv (count of valid ptv items)
-table(data$country_year, data$n_PTV)
-```
+## Models
 
-Yet, we also have the Effective Number of Electoral Parties (ENEP) of each country, which do not vary across the two regions. 
-
-```{r}
-# Cross tab country_year and ENEP 
-#table(data$country_year, data$ENEP)
-```
 
 ### Baseline
-
-The first model explores the association between mean constraint and vote (dummy), with random 
-intercepts for country_year. 
-
-```{r}
-# Fit a logistic multilevel model with random intercepts
-m1 <- glmer(vote ~ Mean_Constraint_Centered + (1 | country_year), 
-            data = data, 
-            family = binomial())
-
-#summary(m1)
-
-# sjPlot
-tab_model(m1, show.re.var = TRUE, 
-          show.icc = TRUE, 
-          show.aic = TRUE, 
-          dv.labels = "Predicting Vote (Multilevel Model)",
-          title = "Logistic Multilevel Model Predicting Vote")
-
-
-```
-
-The association is significant, and odds ratio = 1.45. This result suggests that
-voters with more structured political preferences (higher constraint) are significantly
-more likely to participate in EU elections.
-
-### Rival measures
-
-Next, i consider the two other measures. I filter the dataset to include rows with no 
-NA on them. Then I fit m1_null, where i only model the country_year variance of vote. 
-m2_ptv includes the two measures built on PTV. m3_full adds mean constraint. 
+I fit exploratory models where each re-scaled and centered PTV-derived variable
+predicts vote/no vote. 
 
 ```{r}
 # Ensure all models use the same data subset 
-data_model <- data %>%
-  filter(!is.na(PTV_Gap_Centered) & 
-         !is.na(AP_Centered) & 
-         !is.na(Mean_Constraint_Centered))
+data_1 <- data %>%
+  select(vote,  country_year, Mean_Constraint_centered, PTV_Gap_centered, AP_centered, DIFF_SD_centered,
+         PTV_SD_centered, PTV_M_centered) %>% 
+  na.omit()
 
-# Fit models using the same dataset
+# Fit a logistic multilevel model with random intercepts
+m1 <- glmer(vote ~ Mean_Constraint_centered + (1 | country_year), 
+            data = data_1, 
+            family = binomial())
 
-#m1_null
-m1_null <- glmer(vote ~ (1 | country_year), 
-                 data = data_model, 
-                 family = binomial())
+m2 <- glmer(vote ~ PTV_Gap_centered + (1 | country_year), 
+            data = data_1, 
+            family = binomial())
 
-#summary(m1_null)
+m3 <- glmer(vote ~ AP_centered + (1 | country_year), 
+            data = data_1, 
+            family = binomial())
 
-#m2_ptv
-m2_ptv <- glmer(vote ~ PTV_Gap_Centered + AP_Centered + (1 | country_year), 
-                 data = data_model, 
-                 family = binomial())
+m4 <- glmer(vote ~ DIFF_SD_centered + (1 | country_year), 
+            data = data_1, 
+            family = binomial())
 
-#summary(m2_ptv)
+m5 <- glmer(vote ~ PTV_SD_centered + (1 | country_year), 
+            data = data_1, 
+            family = binomial())
 
-#m3_full
-m3_full <- glmer(vote ~ Mean_Constraint_Centered + PTV_Gap_Centered + AP_Centered + (1 | country_year), 
-                 data = data_model, 
-                 family = binomial())
+m6 <- glmer(vote ~ PTV_M_centered + (1 | country_year), 
+            data = data_1, 
+            family = binomial())
 
-#summary(m3_full)
-```
-
-Results are: 
-
-```{r}
 #list of models
-list_m = list(m1_null, m2_ptv, m3_full)
+m_list = list(m1, m2, m3, m4, m5, m6)
 
 # sjPlot
-tab_model(list_m, show.re.var = TRUE, 
+tab_model(m_list, show.re.var = TRUE, 
           show.icc = TRUE, 
           show.aic = TRUE, 
           dv.labels = "Predicting Vote (Multilevel Model)",
           title = "Logistic Multilevel Model Predicting Vote")
+
+
 ```
 
-Mean constraint remains significant in m3_full. It is weired that in m2, AP has negative 
-coefficient, whereas in M3, AP has negative coefficient. 
+The highest OR are for Mean constraint and PTV_SD. 
 
-I now compare the AIC and BIC of the nested models, and I also perform a likelihood ratio test. 
+### Individual level controls
 
 ```{r}
-# Compare models using AIC/BIC
+# Ensure all models use the same data subset 
+data_2 <- data %>%
+  select(vote,  country_year, Mean_Constraint_centered, PTV_Gap_centered, AP_centered, DIFF_SD_centered,
+         PTV_SD_centered, PTV_M_centered, pol_int_centered, partisan, sex, yb_centered, class_centered) %>% 
+  na.omit()
+
+# Fit a logistic multilevel model with random intercepts
+m1_2 <- glmer(vote ~ Mean_Constraint_centered +
+            pol_int_centered + partisan + sex + yb_centered + class_centered +  # Individual-level
+            + (1 | country_year), 
+            data = data_2, 
+            family = binomial())
+
+m2_2 <- glmer(vote ~ PTV_Gap_centered +  
+            pol_int_centered + partisan + sex + yb_centered + class_centered +  # Individual-level
+            + (1 | country_year), 
+            data = data_2, 
+            family = binomial())
+
+m3_2 <- glmer(vote ~ AP_centered +  
+            pol_int_centered + partisan + sex + yb_centered + class_centered +  # Individual-level
+            + (1 | country_year), 
+            data = data_2, 
+            family = binomial())
+
+m4_2 <- glmer(vote ~ DIFF_SD_centered +  
+            pol_int_centered + partisan + sex + yb_centered + class_centered +  # Individual-level
+            + (1 | country_year), 
+            data = data_2, 
+            family = binomial())
+
+m5_2 <- glmer(vote ~ PTV_SD_centered +  
+            pol_int_centered + partisan + sex + yb_centered + class_centered +  # Individual-level
+            + (1 | country_year), 
+            data = data_2, 
+            family = binomial())
+
+m6_2 <- glmer(vote ~ PTV_M_centered + 
+            pol_int_centered + partisan + sex + yb_centered + class_centered +  # Individual-level
+            + (1 | country_year), 
+            data = data_2, 
+            family = binomial())
+
+#list of models
+m2_list = list(m1_2, m2_2, m3_2, m4_2, m5_2, m6_2)
+
+# sjPlot
+tab_model(m2_list, show.re.var = TRUE, 
+          show.icc = TRUE, 
+          show.aic = TRUE, 
+          dv.labels = "Predicting Vote (Multilevel Model)",
+          title = "Logistic Multilevel Model Predicting Vote, with individual level controls")
+```
+
+All models converged without warnings. Note that I rescaled and centered all variables 
+but the factors (partisan and sex, both dummies).
+
+The highest OR remain those of Mean constraint and PTV_SD.
+
+### Country level controls
+
+```{r}
+# Ensure all models use the same data subset 
+data_3 <- data %>%
+  select(vote, country_year, 
+         Mean_Constraint_centered, PTV_Gap_centered, AP_centered, DIFF_SD_centered,
+         PTV_SD_centered, PTV_M_centered, 
+         pol_int_centered, partisan, sex, yb_centered, class_centered,  # Individual-level
+         ENEP_centered, inflation_centered, mand) %>%  # Country-level
+  na.omit()
+
+# Fit a logistic multilevel model with random intercepts (Baseline with Constraint)
+m1_3 <- glmer(vote ~ Mean_Constraint_centered +
+            pol_int_centered + partisan + sex + yb_centered + class_centered +  # Individual-level
+            ENEP_centered + inflation_centered + mand +                        # Country-level
+            (1 | country_year), 
+            data = data_3, 
+            family = binomial())
+
+# PTV Gap Model
+m2_3 <- glmer(vote ~ PTV_Gap_centered +  
+            pol_int_centered + partisan + sex + yb_centered + class_centered +  # Individual-level
+            ENEP_centered + inflation_centered + mand +                        # Country-level
+            (1 | country_year), 
+            data = data_3, 
+            family = binomial())
+
+# Affective Polarization (AP) Model
+m3_3 <- glmer(vote ~ AP_centered +  
+            pol_int_centered + partisan + sex + yb_centered + class_centered +  # Individual-level
+            ENEP_centered + inflation_centered + mand +                        # Country-level
+            (1 | country_year), 
+            data = data_3, 
+            family = binomial())
+
+# DIFF_SD Model (Variance in Differences)
+m4_3 <- glmer(vote ~ DIFF_SD_centered +  
+            pol_int_centered + partisan + sex + yb_centered + class_centered +  # Individual-level
+            ENEP_centered + inflation_centered + mand +                        # Country-level
+            (1 | country_year), 
+            data = data_3, 
+            family = binomial())
+
+# PTV_SD Model (Variance in PTVs)
+m5_3 <- glmer(vote ~ PTV_SD_centered +  
+            pol_int_centered + partisan + sex + yb_centered + class_centered +  # Individual-level
+            ENEP_centered + inflation_centered + mand +                        # Country-level
+            (1 | country_year), 
+            data = data_3, 
+            family = binomial())
+
+# PTV_M Model (Mean PTV Score)
+m6_3 <- glmer(vote ~ PTV_M_centered + 
+            pol_int_centered + partisan + sex + yb_centered + class_centered +  # Individual-level
+            ENEP_centered + inflation_centered + mand +                        # Country-level
+            (1 | country_year), 
+            data = data_3, 
+            family = binomial())
+
+# List of models
+m3_list = list(m1_3, m2_3, m3_3, m4_3, m5_3, m6_3)
+
+# sjPlot
+tab_model(m3_list, show.re.var = TRUE, 
+          show.icc = TRUE, 
+          show.aic = TRUE, 
+          dv.labels = "Predicting Vote (Multilevel Model, Full Controls)",
+          title = "Logistic Multilevel Model Predicting Vote, with individual and country-level controls")
+
+```
+
+Again, no warnings! 
+
+Main result is that the OR of Mean constraint and PTV_SD remain significant and very high. 
+These OR are comparable to those of country-level variables (e.g.: mand [mandatory voting]) and
+individual level ones (pol interest)
+
+### Comparison between measures
+I now test if Constraint or PTV_SD are better than AP
+
+```{r}
+# Compare full models using AIC/BIC
 model_comparison <- data.frame(
-  Model = c("Null Model", "PTV-Based Measures", "Full Model (Mean Constraint)"),
-  AIC = c(AIC(m1_null), AIC(m2_ptv), AIC(m3_full)),
-  BIC = c(BIC(m1_null), BIC(m2_ptv), BIC(m3_full)),
-  LogLikelihood = c(logLik(m1_null), logLik(m2_ptv), logLik(m3_full))
+  Model = c("Full Model (Mean Constraint)", 
+            "Full Model (Affective Polarization)", 
+            "Full Model (PTV_SD)"),
+  AIC = c(AIC(m1_3), AIC(m3_3), AIC(m5_3)),
+  BIC = c(BIC(m1_3), BIC(m3_3), BIC(m5_3)),
+  LogLikelihood = c(logLik(m1_3), logLik(m3_3), logLik(m5_3))
 )
 
 print(model_comparison)
-
-# Likelihood Ratio Tests 
-anova(m1_null, m2_ptv, m3_full, test = "Chisq")
-
-
-```
-AIC and BIC are lower in the third model. Log-likelihood is highest in the third model. 
-This confirms mean constraint improves our prediction of turnout. 
-
-### Controls
-
-Now i put individual and country level controls. Individual level variables are not
-centered on country_year. I center yb. 
-
-```{r}
-# center yb
-data <- data %>%
-  mutate(yb_scaled = yb - mean(yb, na.rm = TRUE))
 ```
 
+Best is PTV_SD, then AP, then Constraint. Now the formal test:
 
 ```{r}
-# Model
-m4_controls <- glmer(
-  vote ~ Mean_Constraint_Centered + 
-         pol_int + partisan + sex + yb_scaled + class +  # Individual-level
-         ENEP + inflation + mand +                # Country-level
-         (1 | country_year),                      # Random intercept per country-year
-  data = data,
-  family = binomial()
-)
+# Likelihood Ratio Tests
+anova(m3_3, m1_3, test = "Chisq")  # Mean Constraint vs. Affective Polarization
+anova(m3_3, m5_3, test = "Chisq")  # PTV_SD vs. Affective Polarization
+```
+Results are confirmed. We should work with the SD of PTV scores directly I guess. 
+But the gap between AP and constraint is very tiny.
 
-#summary(m4_controls)
 
-# tab model
-tab_model(m4_controls, show.re.var = TRUE, 
+### Interactions
+
+#### with PTV_M
+I specify an individual level interaction between mean constraint and PTV_M. This would
+tell us if the role of constraint varies across mean levels of PTV scores. I do the same interaction
+also for the other best predictors we have found: PTV_SD. 
+
+```{r}
+# Mean Constraint Model with Interaction
+m1_3_interaction <- glmer(vote ~ Mean_Constraint_centered * PTV_M_centered +  # Interaction term
+            pol_int_centered + partisan + sex + yb_centered + class_centered +  # Individual-level
+            ENEP_centered + inflation_centered + mand +                        # Country-level
+            (1 | country_year), 
+            data = data_3, 
+            family = binomial())
+
+# PTV_SD Model with Interaction
+m5_3_interaction <- glmer(vote ~ PTV_SD_centered * PTV_M_centered +  # Interaction term
+            pol_int_centered + partisan + sex + yb_centered + class_centered +  # Individual-level
+            ENEP_centered + inflation_centered + mand +                        # Country-level
+            (1 | country_year), 
+            data = data_3, 
+            family = binomial())
+
+# List of interaction models
+m3_list_interaction <- list(m1_3_interaction, m5_3_interaction)
+
+# sjPlot: Displaying the results in a neat table
+tab_model(m3_list_interaction, show.re.var = TRUE, 
           show.icc = TRUE, 
           show.aic = TRUE, 
-          dv.labels = "Predicting Vote (Multilevel Model)",
-          title = "Logistic Multilevel Model Predicting Vote")
+          dv.labels = "Predicting Vote (Multilevel Model, Interaction Included)",
+          title = "Logistic Multilevel Model Predicting Vote with Interaction (Constraint × PTV Mean)")
+
 ```
 
-Constraint remains significant. I now replace ENEP (not significant) with the number 
-of PTV for each country_year. To do so, I exclude BEL cases (cause of the issue highlighted above: 
-Belgium has 2 regions with different parties). 
+The effect of constraint on voting is reduced when PTV Mean is high. So 
+when individuals like fewer parties (lower PTV_M), constraint plays a stronger role
+in motivating turnout.
+
+In the same vein, the effect of PTV_SD (variance in PTV scores) on voting is weaker
+for those with higher PTV_M.
+
+#### with Partisanship
+I fit the same models, but interacting with Partisanship (dummy). I think this might
+be cleaner cause the measure are more independent (cause partisanship is not built from
+PTV).
 
 ```{r}
-data_m5 = data %>% 
-  filter(country != "BEL")
+# Mean Constraint Model with Interaction (Mean Constraint × Partisanship)
+m1_4_interaction <- glmer(vote ~ Mean_Constraint_centered * partisan +  # Interaction term
+            pol_int_centered + sex + yb_centered + class_centered +  # Individual-level
+            ENEP_centered + inflation_centered + mand +              # Country-level
+            (1 | country_year), 
+            data = data_3, 
+            family = binomial())
 
-# exclude belgium to avoid convergence problems
-m5 = glmer(
-  vote ~ Mean_Constraint_Centered + 
-         pol_int + partisan + sex + yb_scaled + class +  # Individual-level
-         n_PTV + inflation + mand +                # Country-level
-         (1 | country_year),                      # Random intercept per country-year
-  data = data_m5,
-  family = binomial()
-)
+# PTV_SD Model with Interaction (PTV_SD × Partisanship)
+m5_4_interaction <- glmer(vote ~ PTV_SD_centered * partisan +  # Interaction term
+            pol_int_centered + sex + yb_centered + class_centered +  # Individual-level
+            ENEP_centered + inflation_centered + mand +              # Country-level
+            (1 | country_year), 
+            data = data_3, 
+            family = binomial())
 
-#summary(m5)
+# List of interaction models
+m4_list_interaction <- list(m1_4_interaction, m5_4_interaction)
 
-# tab model
-tab_model(m5, show.re.var = TRUE, 
+# sjPlot: Displaying the results in a neat table
+tab_model(m4_list_interaction, show.re.var = TRUE, 
           show.icc = TRUE, 
           show.aic = TRUE, 
-          dv.labels = "Predicting Vote (Multilevel Model)",
-          title = "Logistic Multilevel Model Predicting Vote")
+          dv.labels = "Predicting Vote (Multilevel Model, Interaction Included)",
+          title = "Logistic Multilevel Model Predicting Vote with Interaction (Constraint × Partisanship)")
+
 ```
 
-It seems the effect holds, but the code of M4 and M5 produced several warnings such as: 
-"Model failed to converge", "Model is nearly unidentifiable: very large eigenvalue", and
-"Model is nearly unidentifiable". 
+The effect of Constraint on voting is weaker for partisans. So higher constraint boosts
+turnout more among non-partisans.
+Same thing for the interaction between PTV_SD and partisanship. Greater differentiation
+in party evaluations increases turnout more for non-partisans.
+
+
 
 
 

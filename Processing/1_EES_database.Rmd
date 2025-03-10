@@ -626,6 +626,11 @@ d_2014 = d_2014 %>%
   )))%>%
   rename_with(~ paste0("t_var_ptv_party", seq_along(.)), .cols = qpp8_1:qpp8_8)
 
+
+# NEW: rescale all "t_var_ptv_" values: reduce by 1 so that scale is 0 to 10
+d_2014 <- d_2014 %>%
+  mutate(across(starts_with("t_var_ptv_"), ~ ifelse(!is.na(.), . - 1, NA)))
+
 ```
 
 
@@ -895,6 +900,18 @@ EES[["2004"]] = list_2004
 EES[["2009"]] = list_2009
 EES[["2014"]] = list_2014
 EES[["2019"]] = list_2019
+```
+
+```{r}
+#NEW: remove unplausible PTV data
+
+# After manual checks, we remove this parties from the analyses
+table(EES[["2019"]][["POL"]][["t_var_ptv_party8"]])
+table(EES[["2019"]][["ROU"]][["t_var_ptv_party9"]])
+
+# remove
+EES[["2019"]][["POL"]][["t_var_ptv_party8"]] = NULL
+EES[["2019"]][["ROU"]][["t_var_ptv_party9"]] = NULL
 ```
 
 

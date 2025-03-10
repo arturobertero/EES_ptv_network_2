@@ -1,0 +1,139 @@
+---
+title: "2_EES_Models"
+author: "Arturo Bertero"
+date: "2024-03-31"
+output: html_document
+---
+
+```{r}
+library("pacman")
+p_load(tidyverse, here, haven, countrycode, qgraph, bootnet, EGAnet, psych,
+       huge, corclass, purrr)
+```
+
+
+# Input
+
+```{r}
+EES = read_rds(here("Input", "data", "EES.rds"))
+```
+
+```{r}
+#calculate true N per wave
+
+# Function to calculate total rows for each country within a year
+calculate_total_rows_per_country <- function(year_list) {
+  map_dbl(year_list, nrow) %>% tibble(Country = names(.), N = .)
+}
+
+# Apply function to all years and bind results
+total_rows_long <- map_dfr(EES, calculate_total_rows_per_country, .id = "Year")
+
+# Reshape the data to have countries as rows and years as columns
+total_rows_wide <- total_rows_long %>%
+  pivot_wider(names_from = Year, values_from = N, values_fill = 0)  # Fill missing values with 0
+
+# Print final table
+print(total_rows_wide)
+```
+
+
+# Processing
+
+## Individual level networks
+
+```{r}
+# Function to compute absolute difference matrix 
+compute_difference_matrix <- function(ptv_row) {
+  ptv_values <- as.numeric(ptv_row)  
+  party_labels <- names(ptv_row)  
+  
+  # Ensure at least two valid PTV values exist
+  if (sum(!is.na(ptv_values)) < 2) {
+    return(NULL)  
+  }
+  
+  # Generate all pairwise combinations of PTV variables
+  pairwise_combinations <- expand.grid(Party = party_labels, Compared_Party = party_labels, stringsAsFactors = FALSE) %>%
+    filter(Party != Compared_Party) %>%  # Exclude self-comparisons
+    mutate(Difference = abs(ptv_values[match(Party, party_labels)] - 
+                            ptv_values[match(Compared_Party, party_labels)]))
+  
+  return(pairwise_combinations)
+}
+
+# Function to generate difference matrices for each country-year dataset
+generate_difference_matrices <- function(country_data) {
+  country_data %>%
+    select(starts_with("t_var_ptv")) %>%  # Ensure only PTV variables are selected
+    rowwise() %>%
+    mutate(Difference_Matrix = list(compute_difference_matrix(cur_data()))) %>%
+    ungroup() %>%
+    select(Difference_Matrix)  # Keep only the difference matrix column
+}
+
+# Apply the function across the hierarchical EES list
+EES_mat <- map(EES, function(year_data) {
+  map(year_data, generate_difference_matrices)
+})
+
+# Function to compute mean constraint (average absolute difference score) for an individual
+compute_mean_constraint <- function(difference_matrix) {
+  if (!is.null(difference_matrix) && nrow(difference_matrix) > 0) {
+    return(mean(difference_matrix$Difference, na.rm = TRUE)) 
+  } else {
+    return(NA_real_)  
+  }
+}
+
+# Function to add mean constraint to each dataset
+add_mean_constraint <- function(country_data, country_name, year) {
+  country_data %>%
+    mutate(Mean_Constraint = map_dbl(EES_mat[[year]][[country_name]][["Difference_Matrix"]], compute_mean_constraint))
+}
+
+# Apply function across all year-country datasets 
+EES <- map(names(EES), function(year) {
+  map(names(EES[[year]]), function(country_name) {
+    add_mean_constraint(EES[[year]][[country_name]], country_name, year)
+  }) %>% set_names(names(EES[[year]])) # Preserve country names
+}) %>% set_names(names(EES)) # Preserve year names
+
+
+
+
+```
+
+```{r}
+# Function to compute DIFF_SD (standard deviation of absolute differences)
+compute_diff_sd <- function(difference_matrix) {
+  if (!is.null(difference_matrix) && nrow(difference_matrix) > 0) {
+    return(sd(difference_matrix$Difference, na.rm = TRUE))  # Compute SD of absolute differences
+  } else {
+    return(NA_real_)  # Return NA if no valid data
+  }
+}
+
+# Function to add DIFF_SD to each dataset in EES
+add_diff_sd <- function(country_data, country_name, year) {
+  country_data %>%
+    mutate(DIFF_SD = map_dbl(EES_mat[[year]][[country_name]][["Difference_Matrix"]], compute_diff_sd))
+}
+
+# Apply the function across all year-country datasets
+EES <- map(names(EES), function(year) {
+  map(names(EES[[year]]), function(country_name) {
+    add_diff_sd(EES[[year]][[country_name]], country_name, year)
+  }) %>% set_names(names(EES[[year]]))  # Preserve country names
+}) %>% set_names(names(EES))  # Preserve year names
+
+```
+
+
+# Output
+
+```{r}
+# save model files
+saveRDS(EES, here("Input", "models", "EES_constraint.rds"))
+```
+
