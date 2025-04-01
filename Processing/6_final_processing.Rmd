@@ -139,6 +139,10 @@ data = rescale_and_center(data, "class")
 # Apply to country-level numeric controls
 data = rescale_and_center(data, "ENEP")
 data = rescale_and_center(data, "inflation")
+
+# center year in a different way
+data <- data %>%
+  mutate(year_centered = year - 1989)
 ```
 
 
@@ -447,11 +451,55 @@ Same thing for the interaction between PTV_SD and partisanship. Greater differen
 in party evaluations increases turnout more for non-partisans.
 
 
+#### With time
+
+```{r}
+# interaction between ap and year
+m7_3 <- glmer(vote ~ AP_centered * year_centered +  
+            pol_int_centered + partisan + sex + yb_centered + class_centered +  
+            ENEP_centered + inflation_centered + mand +                        
+            (1 | country_year), 
+            data = data, 
+            family = binomial())
+
+```
+
+```{r}
+# interaction SD and year
+m8_3 <- glmer(vote ~ PTV_SD_centered * year_centered +  
+            pol_int_centered + partisan + sex + yb_centered + class_centered +  
+            ENEP_centered + inflation_centered + mand +                        
+            (1 | country_year), 
+            data = data, 
+            family = binomial())
+
+```
+
+```{r}
+# interaction AP and year
+m9_3 <- glmer(vote ~ AP_centered * year_centered + PTV_SD_centered * year_centered +  
+            pol_int_centered + partisan + sex + yb_centered + class_centered +  
+            ENEP_centered + inflation_centered + mand +                        
+            (1 | country_year), 
+            data = data, 
+            family = binomial())
 
 
+```
 
 
+```{r}
+# interactions together
+m9_3 <- glmer(vote ~ AP_centered * year_centered + PTV_SD_centered * year_centered +  
+            pol_int_centered + partisan + sex + yb_centered + class_centered +  
+            ENEP_centered + inflation_centered + mand +                        
+            (1 | country_year), 
+            data = data, 
+            family = binomial())
 
+summary(m9_3)
+
+```
 
 
 

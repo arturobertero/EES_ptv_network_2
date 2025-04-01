@@ -28,94 +28,73 @@ Suppose in a country we have four parties, and 10 individuals rating them.
 ```{r}
 # Create example data
 df <- tibble::tibble(
-  Voter = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), # Voter 10 was not present in the original example
-  PTV_A = c(10, 0, 10, 10, 10, 10, 5, 10, 4, 10),
-  PTV_B = c(0, 0, 0, 9, 5, 0, 0, 5, 4, 10),
-  PTV_C = c(0, 0, 0, 0, 0, 5, 0, 5, 3, 10),
-  PTV_D = c(0, 10, 9, 0, 5, 5, 0, 5, 3, 10)) 
+  Voter = c(1, 2, 3, 4, 5, 6, 7, 8), 
+  PTV_A = c(10, 10, 10, 5, 10, 4, 10, 0),
+  PTV_B = c(0, 0, 5, 0, 5, 4, 10, 0),
+  PTV_C = c(0, 0, 0, 0, 5, 3, 10, 0),
+  PTV_D = c(0, 9, 5, 0, 5, 3, 10, 0)) 
 ```
 
-| **_Voter_** | **_PTV_A_** | **_PTV_B_** | **_PTV_C_** | **_PTV_D_** |
-|-------------|-------------|-------------|-------------|-------------|
-|      1      |      10     |      0      |      0      |      0      |
-|      2      |      0      |      0      |      0      |      10     |
-|      3      |      10     |      0      |      0      |      9      |
-|      4      |      10     |      9      |      0      |      0      |
-|      5      |      10     |      5      |      0      |      5      |
-|      6      |      10     |      0      |      5      |      5      |
-|      7      |      5      |      0      |      0      |      0      |
-|      8      |      10     |      5      |      5      |      5      |
-|      9      |      4      |      4      |      3      |      3      |
-|      10     |      10     |      10     |      10     |      10     |
 
-Voter 1 and 2 have strong partisanship and AP. 3 and 4 are divided by 2 parties. 
-5 and 6 are supporter of a party, but also mildly like another one. Voter 7 only
-likes one party, and not that much. Voter 8 likes all parties, but especially A.
-Voter 9 dislike most parties. Voter 10 should have min values across the three 
-measures: it has no PTV gap, no AP, min constraint. 
+## PTV measures
 
-I also generate a bigger simulated dataset. Since PTV data are generally skewed to
-the left, i try to arrive at the same result. 
+We start from the easiest measure. We compute the PTV gap, on all datasets. 
 
 ```{r}
-# Set seed 
-set.seed(1)
-
-# Function to generate skewed PTV values 
-generate_skewed_ptv <- function(n) {
-  return(sample(c(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10), 
-                size = n, 
-                replace = TRUE, 
-                prob = c(0.3, 0.15, 0.12, 0.10, 0.09, 0.08, 0.06, 0.05, 0.03, 0.02, 0.01)))
-}
-
-# Number of voters 
-num_voters <- 1000
-
-# Create dataset
-df_2 <- tibble(
-  Voter = 1:num_voters,
-  PTV_A = generate_skewed_ptv(num_voters),
-  PTV_B = generate_skewed_ptv(num_voters),
-  PTV_C = generate_skewed_ptv(num_voters),
-  PTV_D = generate_skewed_ptv(num_voters)
-)
-
-#Head
-head(df_2)
+# Compute PTV Gap (Max - Second Max)
+df <- df %>%
+  rowwise() %>%
+  mutate(
+    PTV_Gap = {
+      sorted_scores <- sort(c_across(PTV_A:PTV_D), decreasing = TRUE)
+      ifelse(length(sorted_scores) >= 2, sorted_scores[1] - sorted_scores[2], NA)
+    }
+  ) %>%
+  ungroup()
 ```
 
-As a robustenss check, I also generate a df where we have 10 PTVs. 
+Now AP, unweighted
 
 ```{r}
-# Create dataset for a 10-party system
-df_3 <- tibble(
-  Voter = 1:num_voters,
-  PTV_A = generate_skewed_ptv(num_voters),
-  PTV_B = generate_skewed_ptv(num_voters),
-  PTV_C = generate_skewed_ptv(num_voters),
-  PTV_D = generate_skewed_ptv(num_voters),
-  PTV_E = generate_skewed_ptv(num_voters),
-  PTV_F = generate_skewed_ptv(num_voters),
-  PTV_G = generate_skewed_ptv(num_voters),
-  PTV_H = generate_skewed_ptv(num_voters),
-  PTV_I = generate_skewed_ptv(num_voters),
-  PTV_J = generate_skewed_ptv(num_voters)
-)
+# Compute Affective Polarization using Wagner's Formula
+df <- df %>%
+  rowwise() %>%
+  mutate(
+    like_max = max(c_across(PTV_A:PTV_D), na.rm = TRUE),  # Identify the most liked party
+    n_p = sum(!is.na(c_across(PTV_A:PTV_D))) - 1,  # Count the number of other parties
+    AP = ifelse(n_p > 0, sqrt(sum((c_across(PTV_A:PTV_D) - like_max)^2, na.rm = TRUE) / n_p), NA)
+  ) %>%
+  ungroup() %>%
+  select(-like_max, -n_p)  # Drop intermediate variables
+```
 
-# Print
-head(df_3)
+Finally, we compute PTV_SD.
+
+```{r}
+# Compute PTV_SD (Standard Deviation of PTV Scores)
+df <- df %>%
+  rowwise() %>%
+  mutate(
+    PTV_SD = ifelse(sum(!is.na(c_across(PTV_A:PTV_D))) > 1, 
+                    sd(c_across(PTV_A:PTV_D), na.rm = TRUE), NA_real_)
+  ) %>%
+  ungroup()
+
+# Ensure numeric format
+df <- df %>%
+  mutate(PTV_SD = as.numeric(PTV_SD))
+
+```
+
+Let's visualize a comparison of the measures. 
+```{r}
+df = round(df, digits = 3)
+
+df
 ```
 
 
-## Individual level belief systems
-
-We can visualize these PTV structure as individual level belief systems. Edges
-indicate the absolute perceived distance (i.e.: the abs diff) between all party 
-pairs. This generate a fully connected, weighted, and undirected network, where edges 
-have min = 0 (parties evaluated equally) and max 10 (parties evaluated 10 vs 0).
-
-This code builds the individual level matrices. 
+# Old
 
 ```{r}
 # Function to compute absolute difference matrix 
@@ -147,33 +126,6 @@ df_matrices_list <- map(1:nrow(df), function(i) {
 names(df_matrices_list) <- df$Voter
 ```
 
-I also apply the function to the bigger datasets. 
-
-```{r}
-# Apply function to df_2
-df_matrices_list_2 <- map(1:nrow(df_2), function(i) {
-  compute_difference_matrix(df_2[i, 2:5])  
-})
-
-# Name each element 
-names(df_matrices_list_2) <- df_2$Voter
-
-# Apply function to df_3
-df_matrices_list_3 <- map(1:nrow(df_3), function(i) {
-  compute_difference_matrix(df_3[i, 2:5])  
-})
-
-# Name each element 
-names(df_matrices_list_3) <- df_3$Voter
-```
-
-
-Now I show a single matrix. 
-
-```{r}
-# Print 
-print(df_matrices_list[[1]])
-```
 
 And I visualize the 10 belief systems. 
 
@@ -207,184 +159,3 @@ for (i in seq_along(df_matrices_list)) {
 }
 
 ```
-
-The belief systems behave as expected, but matrices present some problems: they are symmetrical. 
-This means that we can not compute the Constraint measure directly on the full matrix, 
-as this would bias the final output. Indeed, in countries with more parties we have lower constrain 
-by design: there are more 0s, due to the higher number of zero differences obtained when 
-computing differences between the PTV scores of the same party. For example, in a country with 4
-parties we have 4 0s by design (diff between Party A and A, B-B, C-C, D-D). These are 5 0s
-when we have 5 parties. 
-
-## PTV measures
-
-We start from the easiest measure. We compute the PTV gap, on all datasets. 
-
-```{r}
-# Compute PTV Gap (Max - Second Max)
-df <- df %>%
-  rowwise() %>%
-  mutate(
-    PTV_Gap = {
-      sorted_scores <- sort(c_across(PTV_A:PTV_D), decreasing = TRUE)
-      ifelse(length(sorted_scores) >= 2, sorted_scores[1] - sorted_scores[2], NA)
-    }
-  ) %>%
-  ungroup()
-
-# Compute PTV Gap on df_2
-df_2 <- df_2 %>%
-  rowwise() %>%
-  mutate(
-    PTV_Gap = {
-      sorted_scores <- sort(c_across(PTV_A:PTV_D), decreasing = TRUE)
-      ifelse(length(sorted_scores) >= 2, sorted_scores[1] - sorted_scores[2], NA)
-    }
-  ) %>%
-  ungroup()
-
-# Compute PTV Gap on df_3
-df_3 <- df_3 %>%
-  rowwise() %>%
-  mutate(
-    PTV_Gap = {
-      sorted_scores <- sort(c_across(PTV_A:PTV_D), decreasing = TRUE)
-      ifelse(length(sorted_scores) >= 2, sorted_scores[1] - sorted_scores[2], NA)
-    }
-  ) %>%
-  ungroup()
-```
-
-
-Now we compute AP, using Magnus Wagner's famous formula. There are many versions. 
-The main differences is between weighted and unweighted measures. Weighted ones take 
-into account how big/small is a party. I avoid computing these, as they are challenging
-to compute in the horrible EES dataset where parties are stored in character format, not 
-with party codes. This makes a nightmare retrieving info on their vote shares. So I resort 
-to the unweighted measure of mean distance from the most-liked party. 
-
-```{r}
-# Compute Affective Polarization using Wagner's Formula
-df <- df %>%
-  rowwise() %>%
-  mutate(
-    like_max = max(c_across(PTV_A:PTV_D), na.rm = TRUE),  # Identify the most liked party
-    n_p = sum(!is.na(c_across(PTV_A:PTV_D))) - 1,  # Count the number of other parties
-    AP = ifelse(n_p > 0, sqrt(sum((c_across(PTV_A:PTV_D) - like_max)^2, na.rm = TRUE) / n_p), NA)
-  ) %>%
-  ungroup() %>%
-  select(-like_max, -n_p)  # Drop intermediate variables
-
-# Compute ap on df_2
-df_2 <- df_2 %>%
-  rowwise() %>%
-  mutate(
-    like_max = max(c_across(PTV_A:PTV_D), na.rm = TRUE),  # Identify the most liked party
-    n_p = sum(!is.na(c_across(PTV_A:PTV_D))) - 1,  # Count the number of other parties
-    AP = ifelse(n_p > 0, sqrt(sum((c_across(PTV_A:PTV_D) - like_max)^2, na.rm = TRUE) / n_p), NA)
-  ) %>%
-  ungroup() %>%
-  select(-like_max, -n_p)  # Drop intermediate variables
-
-# Compute ap on df_3
-df_3 <- df_3 %>%
-  rowwise() %>%
-  mutate(
-    like_max = max(c_across(PTV_A:PTV_D), na.rm = TRUE),  # Identify the most liked party
-    n_p = sum(!is.na(c_across(PTV_A:PTV_D))) - 1,  # Count the number of other parties
-    AP = ifelse(n_p > 0, sqrt(sum((c_across(PTV_A:PTV_D) - like_max)^2, na.rm = TRUE) / n_p), NA)
-  ) %>%
-  ungroup() %>%
-  select(-like_max, -n_p)  # Drop intermediate variables
-
-```
-
-Finally, we work with the upper triangle of the matrices and calculate mean constraint.
-In this way we avoid self-comparison.
-
-```{r}
-# Function to compute Mean Constraint 
-compute_mean_constraint <- function(ptv_row) {
-  ptv_values <- as.numeric(ptv_row)
-  
-  # Ensure at least 2 parties are rated
-  if (sum(!is.na(ptv_values)) < 2) {
-    return(NA_real_)
-  }
-  
-  # Generate all pairwise absolute differences (excluding self-comparisons)
-  pairwise_differences <- combn(ptv_values, 2, function(x) abs(diff(x))) # combn only selects unique pairs
-  
-  # Compute the average absolute pairwise difference
-  return(mean(pairwise_differences, na.rm = TRUE))
-}
-
-# Apply function on df
-df <- df %>%
-  rowwise() %>%
-  mutate(Mean_Constraint = compute_mean_constraint(c_across(PTV_A:PTV_D))) %>%
-  ungroup()
-
-df = round(df, 3)
-
-# Apply function on df_2
-df_2 <- df_2 %>%
-  rowwise() %>%
-  mutate(Mean_Constraint = compute_mean_constraint(c_across(PTV_A:PTV_D))) %>%
-  ungroup()
-
-df_2 = round(df_2, 3)
-
-# Apply function on df_3
-df_3 <- df_3 %>%
-  rowwise() %>%
-  mutate(Mean_Constraint = compute_mean_constraint(c_across(PTV_A:PTV_D))) %>%
-  ungroup()
-
-df_3 = round(df_3, 3)
-
-
-
-```
-
-Let's visualize a comparison of the measures. 
-
-| **_Voter_** | **_PTV_A_** | **_PTV_B_** | **_PTV_C_** | **_PTV_D_** | **_PTV_GAP_** | **_AP_** | **_Constraint_** |
-|-------------|-------------|-------------|-------------|-------------|---------------|----------|------------------|
-|      1      |      10     |      0      |      0      |      0      |       10      |    10    |         5        |
-|      2      |      0      |      0      |      0      |      10     |       10      |    10    |         5        |
-|      3      |      10     |      0      |      0      |      9      |       1       |   8.18   |        6.5       |
-|      4      |      10     |      9      |      0      |      0      |       1       |   8.18   |        6.5       |
-|      5      |      10     |      5      |      0      |      5      |       5       |   7.07   |         5        |
-|      6      |      10     |      0      |      5      |      5      |       5       |   7.07   |         5        |
-|      7      |      5      |      0      |      0      |      0      |       5       |     5    |        2.5       |
-|      8      |      10     |      5      |      5      |      5      |       5       |     5    |        2.5       |
-|      9      |      4      |      4      |      3      |      3      |       0       |   0.816  |       0.667      |
-|      10     |      10     |      10     |      10     |      10     |       0       |   0.000  |       0.000      |
-
-So, the key difference between our measure and the others is that constraint 
-works with every pair of party differences. This means it is actually at its max when
-absolute differences are maximized (voters 3 and 4), and not when voters have a clear 
-preference for a single party (voters 1 and 2). Moreover, for our measure, situations
-of voters 1 and 2 is identical to those of voters 5 and 6. I think this could make sense. 
-For voter 1, all parties but A are not a viable option. In case that party betrays him/her
-there is no other option than abstention. However, in case voter 5 is betrayed by party A, 
-voting for other parties should be more likely. 
-
-One point which can create problem, however, is that this measure depends (a tiny bit) 
-on the number of parties we have in party systems. 
-
-```{r}
-max_4parties = max(df$Mean_Constraint)
-max_4parties_2 = max(df_2$Mean_Constraint)
-max_10parties = max(df_3$Mean_Constraint)
-
-# Print
-max_4parties
-max_4parties_2
-max_10parties
-```
-
-So I think it is important to find a way to control for the strucutre of party systems in the final models. 
-
-
